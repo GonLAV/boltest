@@ -1,0 +1,3313 @@
+<!doctype html>
+<html lang="en" dir="ltr">
+ <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>BOLTEST - Test Case Management System</title>
+  <script src="/_sdk/element_sdk.js"></script>
+  <style>
+    body {
+      box-sizing: border-box;
+    }
+    
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    html, body {
+      height: 100%;
+      width: 100%;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      overflow: hidden;
+    }
+
+    body {
+      background: #f7fafc;
+      color: #2d3748;
+      transition: background 0.3s ease;
+    }
+
+    body.dark-mode {
+      background: #1a202c;
+      color: #e2e8f0;
+    }
+
+    /* Login Screen */
+    #loginScreen {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 100%;
+      width: 100%;
+    }
+
+    .login-container {
+      background: white;
+      border-radius: 16px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      padding: 48px;
+      max-width: 420px;
+      width: 90%;
+      text-align: center;
+    }
+
+    body.dark-mode .login-container {
+      background: #2d3748;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.6);
+    }
+
+    .login-logo {
+      font-size: 64px;
+      margin-bottom: 16px;
+    }
+
+    .login-title {
+      font-size: 28px;
+      font-weight: 700;
+      margin-bottom: 8px;
+      color: #2d3748;
+    }
+
+    body.dark-mode .login-title {
+      color: #e2e8f0;
+    }
+
+    .login-subtitle {
+      font-size: 14px;
+      color: #718096;
+      margin-bottom: 32px;
+    }
+
+    body.dark-mode .login-subtitle {
+      color: #a0aec0;
+    }
+
+    .form-group {
+      margin-bottom: 12px;
+      text-align: left;
+    }
+
+    .form-label {
+      display: block;
+      font-size: 12px;
+      font-weight: 600;
+      margin-bottom: 6px;
+      color: #2d3748;
+    }
+
+    body.dark-mode .form-label {
+      color: #e2e8f0;
+    }
+
+    .form-input {
+      width: 100%;
+      padding: 8px 12px;
+      border: 2px solid #e2e8f0;
+      border-radius: 6px;
+      font-size: 13px;
+      transition: all 0.2s;
+      background: white;
+      color: #2d3748;
+    }
+
+    body.dark-mode .form-input {
+      background: #1a202c;
+      border-color: #4a5568;
+      color: #e2e8f0;
+    }
+
+    .form-input:focus {
+      outline: none;
+      border-color: #667eea;
+      box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.2);
+    }
+
+    .btn-primary {
+      width: 100%;
+      padding: 14px;
+      background: #667eea;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: transform 0.2s, box-shadow 0.2s;
+      margin-top: 8px;
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 20px rgba(102, 126, 234, 0.3);
+      background: #5568d3;
+    }
+
+    .btn-primary:active {
+      transform: translateY(0);
+    }
+
+    /* App Layout */
+    #appLayout {
+      display: none;
+      height: 100%;
+      width: 100%;
+      background: #f7fafc;
+      flex-direction: row;
+    }
+
+    body.dark-mode #appLayout {
+      background: #1a202c;
+    }
+
+    #appLayout.active {
+      display: flex;
+    }
+
+    /* Sidebar */
+    .sidebar {
+      width: 280px;
+      height: 100%;
+      background: white;
+      border-right: 2px solid #e2e8f0;
+      display: flex;
+      flex-direction: column;
+      padding: 0;
+      transition: all 0.3s ease;
+    }
+
+    .sidebar.collapsed {
+      margin-left: -280px;
+    }
+
+    body.dark-mode .sidebar {
+      background: #2d3748;
+      border-right-color: #4a5568;
+    }
+
+    .btn-toggle-sidebar {
+      position: fixed;
+      top: 24px;
+      left: 24px;
+      z-index: 1000;
+      padding: 10px 16px;
+      background: #667eea;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 18px;
+      box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+      transition: all 0.2s;
+    }
+    
+    .btn-toggle-sidebar:hover {
+      background: #5568d3;
+      transform: translateY(-2px);
+    }
+
+    .sidebar-header {
+      padding: 24px;
+      border-bottom: 2px solid #e2e8f0;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    body.dark-mode .sidebar-header {
+      border-bottom-color: #4a5568;
+    }
+
+    .sidebar-logo {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+
+    .sidebar-logo-icon {
+      font-size: 32px;
+    }
+
+    .sidebar-logo-text {
+      font-size: 20px;
+      font-weight: 700;
+      color: #2d3748;
+    }
+
+    body.dark-mode .sidebar-logo-text {
+      color: #e2e8f0;
+    }
+
+    .sidebar-project {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 16px;
+      background: #f7fafc;
+      border-radius: 8px;
+      font-size: 14px;
+      color: #4a5568;
+      border: 1px solid #e2e8f0;
+    }
+
+    body.dark-mode .sidebar-project {
+      background: #1a202c;
+      color: #cbd5e0;
+      border-color: #4a5568;
+    }
+
+    .sidebar-nav {
+      flex: 1;
+      padding: 16px;
+      overflow-y: auto;
+      overflow-x: hidden;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .nav-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 16px;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.2s;
+      font-size: 14px;
+      font-weight: 600;
+      color: #4a5568;
+      white-space: nowrap;
+    }
+
+    body.dark-mode .nav-item {
+      color: #cbd5e0;
+    }
+
+    .nav-item:hover {
+      background: #f7fafc;
+      color: #2d3748;
+    }
+
+    body.dark-mode .nav-item:hover {
+      background: #1a202c;
+      color: #e2e8f0;
+    }
+
+    .nav-item.active {
+      background: #667eea;
+      color: white;
+    }
+
+    .nav-item-icon {
+      font-size: 18px;
+    }
+
+    .sidebar-footer {
+      padding: 16px;
+      border-top: 2px solid #e2e8f0;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    body.dark-mode .sidebar-footer {
+      border-top-color: #4a5568;
+    }
+
+    .settings-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px;
+      background: #f7fafc;
+      border-radius: 8px;
+      margin-bottom: 8px;
+    }
+
+    body.dark-mode .settings-row {
+      background: #1a202c;
+    }
+
+    .settings-label {
+      font-size: 14px;
+      font-weight: 600;
+      color: #4a5568;
+    }
+
+    body.dark-mode .settings-label {
+      color: #cbd5e0;
+    }
+
+    .toggle-switch {
+      width: 48px;
+      height: 24px;
+      background: #cbd5e0;
+      border-radius: 12px;
+      position: relative;
+      cursor: pointer;
+      transition: background 0.3s;
+    }
+
+    .toggle-switch.active {
+      background: #667eea;
+    }
+
+    .toggle-switch::after {
+      content: '';
+      position: absolute;
+      width: 20px;
+      height: 20px;
+      background: white;
+      border-radius: 50%;
+      top: 2px;
+      left: 2px;
+      transition: transform 0.3s;
+    }
+
+    .toggle-switch.active::after {
+      transform: translateX(24px);
+    }
+
+    .btn-logout {
+      padding: 12px;
+      background: #fc8181;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+
+    .btn-logout:hover {
+      background: #f56565;
+      transform: translateY(-2px);
+    }
+
+    /* Main Content */
+    .main-content {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+      overflow: hidden;
+    }
+
+    .main-header {
+      background: white;
+      border-bottom: 2px solid #e2e8f0;
+      padding: 24px 32px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      transition: all 0.3s ease;
+    }
+
+    .main-header.collapsed {
+      padding: 8px 32px;
+    }
+
+    .main-header.collapsed .page-title {
+      font-size: 18px;
+    }
+
+    .main-header.collapsed .header-actions {
+      display: none;
+    }
+
+    body.dark-mode .main-header {
+      background: #2d3748;
+      border-bottom-color: #4a5568;
+    }
+
+    .page-title {
+      font-size: 28px;
+      font-weight: 700;
+      color: #2d3748;
+    }
+
+    body.dark-mode .page-title {
+      color: #e2e8f0;
+    }
+
+    .header-actions {
+      display: flex;
+      gap: 12px;
+    }
+
+    .btn-icon {
+      padding: 10px 16px;
+      background: white;
+      border: 2px solid #e2e8f0;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.2s;
+      font-size: 18px;
+    }
+
+    body.dark-mode .btn-icon {
+      background: #1a202c;
+      border-color: #4a5568;
+    }
+
+    .btn-icon:hover {
+      border-color: #667eea;
+      transform: translateY(-2px);
+    }
+
+    #contentArea {
+      flex: 1;
+      overflow-y: auto;
+      padding: 32px;
+    }
+
+    .hidden {
+      display: none !important;
+    }
+
+    /* Dashboard View */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 24px;
+      margin-bottom: 32px;
+    }
+
+    .stat-card {
+      background: white;
+      border-radius: 12px;
+      padding: 24px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+
+    body.dark-mode .stat-card {
+      background: #2d3748;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+    }
+
+    .stat-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+    }
+
+    .stat-icon {
+      font-size: 32px;
+      margin-bottom: 12px;
+    }
+
+    .stat-label {
+      font-size: 14px;
+      color: #718096;
+      margin-bottom: 8px;
+    }
+
+    body.dark-mode .stat-label {
+      color: #a0aec0;
+    }
+
+    .stat-value {
+      font-size: 32px;
+      font-weight: 700;
+      color: #2d3748;
+    }
+
+    body.dark-mode .stat-value {
+      color: #e2e8f0;
+    }
+
+    .recent-section {
+      background: white;
+      border-radius: 12px;
+      padding: 24px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    body.dark-mode .recent-section {
+      background: #2d3748;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+    }
+
+    .section-title {
+      font-size: 18px;
+      font-weight: 700;
+      margin-bottom: 16px;
+      color: #2d3748;
+    }
+
+    body.dark-mode .section-title {
+      color: #e2e8f0;
+    }
+
+    .recent-list {
+      list-style: none;
+    }
+
+    .recent-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px;
+      border-radius: 8px;
+      transition: background 0.2s;
+      margin-bottom: 8px;
+    }
+
+    .recent-item:hover {
+      background: #f7fafc;
+    }
+
+    body.dark-mode .recent-item:hover {
+      background: #1a202c;
+    }
+
+    .recent-item-title {
+      font-weight: 600;
+      color: #2d3748;
+    }
+
+    body.dark-mode .recent-item-title {
+      color: #e2e8f0;
+    }
+
+    .recent-item-meta {
+      font-size: 12px;
+      color: #718096;
+    }
+
+    body.dark-mode .recent-item-meta {
+      color: #a0aec0;
+    }
+
+    /* Create Test Case View */
+    .form-card {
+      background: white;
+      border-radius: 10px;
+      padding: 16px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+      margin-bottom: 20px;
+    }
+
+    body.dark-mode .form-card {
+      background: #2d3748;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+    }
+
+    .card-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 16px;
+      padding-bottom: 12px;
+      border-bottom: 2px solid #e2e8f0;
+    }
+
+    body.dark-mode .card-header {
+      border-bottom-color: #4a5568;
+    }
+
+    .card-title {
+      font-size: 16px;
+      font-weight: 700;
+      color: #2d3748;
+    }
+
+    body.dark-mode .card-title {
+      color: #e2e8f0;
+    }
+
+    .btn-secondary {
+      padding: 10px 20px;
+      background: white;
+      border: 2px solid #667eea;
+      color: #667eea;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    body.dark-mode .btn-secondary {
+      background: #1a202c;
+      border-color: #667eea;
+      color: #667eea;
+    }
+
+    .btn-secondary:hover {
+      background: #667eea;
+      color: white;
+      transform: translateY(-2px);
+    }
+
+    .form-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+
+    .form-group-full {
+      grid-column: 1 / -1;
+    }
+
+    textarea.form-input {
+      resize: vertical;
+      min-height: 100px;
+      font-family: inherit;
+    }
+
+    /* Compact Fields Row */
+    .compact-fields-row {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 12px;
+      margin-top: 12px;
+    }
+
+    .form-group-compact {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .form-label-compact {
+      font-size: 11px;
+      font-weight: 600;
+      color: #718096;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    body.dark-mode .form-label-compact {
+      color: #a0aec0;
+    }
+
+    .form-input-compact {
+      width: 100%;
+      padding: 8px 10px;
+      border: 1px solid #e2e8f0;
+      border-radius: 6px;
+      font-size: 13px;
+      background: white;
+      color: #2d3748;
+      transition: all 0.2s;
+    }
+
+    body.dark-mode .form-input-compact {
+      background: #1a202c;
+      border-color: #4a5568;
+      color: #e2e8f0;
+    }
+
+    .form-input-compact:focus {
+      outline: none;
+      border-color: #667eea;
+      box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.1);
+    }
+
+    /* Steps Editor */
+    .steps-mode-tabs {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 20px;
+    }
+
+    .steps-mode-tab {
+      padding: 10px 20px;
+      background: #e2e8f0;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 600;
+      color: #4a5568;
+      transition: all 0.2s;
+    }
+
+    body.dark-mode .steps-mode-tab {
+      background: #1a202c;
+      color: #cbd5e0;
+    }
+
+    .steps-mode-tab.active {
+      background: #667eea;
+      color: white;
+    }
+
+    .steps-editor-container {
+      position: relative;
+    }
+
+    #visualEditor {
+      display: block;
+    }
+
+    #rawEditorContainer {
+      display: none;
+    }
+
+    .steps-toolbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 16px;
+      padding: 12px;
+      background: #f7fafc;
+      border-radius: 8px;
+    }
+
+    body.dark-mode .steps-toolbar {
+      background: #1a202c;
+    }
+
+    .btn-add-step {
+      padding: 10px 20px;
+      background: #48bb78;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .btn-add-step:hover {
+      background: #38a169;
+      transform: translateY(-2px);
+    }
+
+    .steps-grid {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 64px 32px;
+      color: #718096;
+    }
+
+    body.dark-mode .empty-state {
+      color: #a0aec0;
+    }
+
+    .empty-state-icon {
+      font-size: 64px;
+      margin-bottom: 16px;
+      opacity: 0.5;
+    }
+
+    .empty-state-title {
+      font-size: 20px;
+      font-weight: 600;
+      margin-bottom: 8px;
+    }
+
+    .empty-state-text {
+      font-size: 14px;
+    }
+
+    .step-item {
+      background: white;
+      border: 2px solid #e2e8f0;
+      border-radius: 10px;
+      padding: 16px;
+      transition: all 0.2s;
+      position: relative;
+    }
+
+    body.dark-mode .step-item {
+      background: #2d3748;
+      border-color: #4a5568;
+    }
+
+    .step-item:hover {
+      border-color: #667eea;
+      box-shadow: 0 4px 12px rgba(102, 126, 234, 0.1);
+      transform: translateY(-2px);
+    }
+
+    .step-item.dragging {
+      opacity: 0.5;
+      transform: scale(0.98);
+    }
+
+    .step-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 10px;
+    }
+
+    .step-header-left {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .drag-handle {
+      font-size: 20px;
+      cursor: move;
+      color: #cbd5e0;
+    }
+
+    .step-number {
+      font-weight: 700;
+      color: #667eea;
+      font-size: 18px;
+    }
+
+    .step-actions {
+      display: flex;
+      gap: 8px;
+    }
+
+    .btn-step-action {
+      padding: 6px 10px;
+      background: transparent;
+      border: 1px solid #e2e8f0;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 14px;
+      transition: all 0.2s;
+    }
+
+    body.dark-mode .btn-step-action {
+      border-color: #4a5568;
+    }
+
+    .btn-step-action:hover {
+      background: #f7fafc;
+      transform: scale(1.05);
+    }
+
+    body.dark-mode .btn-step-action:hover {
+      background: #2d3748;
+    }
+
+    .step-fields {
+      display: grid;
+      grid-template-columns: 1fr 1fr 140px;
+      gap: 12px;
+      align-items: start;
+    }
+
+    .step-field-group {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      position: relative;
+    }
+
+    .step-field-label {
+      font-size: 11px;
+      font-weight: 600;
+      color: #718096;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    body.dark-mode .step-field-label {
+      color: #a0aec0;
+    }
+
+    .step-field-wrapper {
+      position: relative;
+    }
+
+    .formatting-toolbar {
+      display: none;
+      position: absolute;
+      top: -52px;
+      left: 0;
+      background: white;
+      border: 2px solid #667eea;
+      border-radius: 10px;
+      padding: 8px;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+      z-index: 1000;
+      gap: 6px;
+      flex-wrap: wrap;
+      max-width: 600px;
+      align-items: center;
+    }
+
+    body.dark-mode .formatting-toolbar {
+      background: #2d3748;
+      border-color: #667eea;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6);
+    }
+
+    .formatting-toolbar.active {
+      display: flex;
+    }
+
+    .format-btn {
+      padding: 8px 12px;
+      background: white;
+      border: 1px solid #e2e8f0;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 13px;
+      font-weight: 600;
+      transition: all 0.2s;
+      white-space: nowrap;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      min-width: 38px;
+      justify-content: center;
+    }
+
+    body.dark-mode .format-btn {
+      background: #1a202c;
+      border-color: #4a5568;
+      color: #e2e8f0;
+    }
+
+    .format-btn:hover {
+      background: #667eea;
+      color: white;
+      border-color: #667eea;
+      transform: translateY(-2px);
+      box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+    }
+
+    .format-btn.active {
+      background: #667eea;
+      color: white;
+      border-color: #667eea;
+    }
+
+    .toolbar-separator {
+      width: 1px;
+      height: 28px;
+      background: #cbd5e0;
+      margin: 0 4px;
+    }
+
+    body.dark-mode .toolbar-separator {
+      background: #4a5568;
+    }
+
+    .color-picker-wrapper,
+    .size-picker-wrapper,
+    .emoji-picker-wrapper {
+      position: relative;
+      display: inline-block;
+    }
+
+    .color-picker-dropdown {
+      display: none;
+      position: absolute;
+      top: 100%;
+      left: 0;
+      margin-top: 6px;
+      background: white;
+      border: 2px solid #667eea;
+      border-radius: 8px;
+      padding: 10px;
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+      z-index: 1100;
+      gap: 8px;
+      flex-wrap: wrap;
+      width: 200px;
+    }
+
+    body.dark-mode .color-picker-dropdown {
+      background: #2d3748;
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.5);
+    }
+
+    .color-picker-dropdown.active {
+      display: flex;
+    }
+
+    .color-option {
+      width: 32px;
+      height: 32px;
+      border-radius: 6px;
+      cursor: pointer;
+      border: 2px solid transparent;
+      transition: all 0.2s;
+    }
+
+    .color-option:hover {
+      transform: scale(1.15);
+      border-color: #667eea;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+    }
+
+    .size-picker-dropdown {
+      display: none;
+      position: absolute;
+      top: 100%;
+      left: 0;
+      margin-top: 6px;
+      background: white;
+      border: 2px solid #667eea;
+      border-radius: 8px;
+      padding: 8px;
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+      z-index: 1100;
+      flex-direction: column;
+      gap: 4px;
+      min-width: 140px;
+    }
+
+    body.dark-mode .size-picker-dropdown {
+      background: #2d3748;
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.5);
+    }
+
+    .size-picker-dropdown.active {
+      display: flex;
+    }
+
+    .size-option {
+      padding: 10px 14px;
+      background: white;
+      border: 1px solid #e2e8f0;
+      border-radius: 5px;
+      cursor: pointer;
+      text-align: left;
+      font-weight: 600;
+      transition: all 0.2s;
+    }
+
+    body.dark-mode .size-option {
+      background: #1a202c;
+      border-color: #4a5568;
+      color: #e2e8f0;
+    }
+
+    .size-option:hover {
+      background: #667eea;
+      color: white;
+      border-color: #667eea;
+      transform: translateX(4px);
+    }
+
+    .emoji-picker-dropdown {
+      display: none;
+      position: absolute;
+      top: 100%;
+      left: 0;
+      margin-top: 6px;
+      background: white;
+      border: 2px solid #667eea;
+      border-radius: 8px;
+      padding: 14px;
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+      z-index: 1100;
+      gap: 8px;
+      flex-wrap: wrap;
+      width: 320px;
+      max-height: 240px;
+      overflow-y: auto;
+    }
+
+    body.dark-mode .emoji-picker-dropdown {
+      background: #2d3748;
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.5);
+    }
+
+    .emoji-picker-dropdown.active {
+      display: flex;
+    }
+
+    .emoji-option {
+      font-size: 26px;
+      cursor: pointer;
+      padding: 6px;
+      border-radius: 6px;
+      transition: all 0.2s;
+      line-height: 1;
+    }
+
+    .emoji-option:hover {
+      background: #f7fafc;
+      transform: scale(1.3);
+    }
+
+    body.dark-mode .emoji-option:hover {
+      background: #1a202c;
+    }
+
+    /* Attachment Preview */
+    .attachment-preview {
+      background: #f7fafc;
+      border: 2px solid #e2e8f0;
+      border-radius: 8px;
+      padding: 8px;
+    }
+
+    body.dark-mode .attachment-preview {
+      background: #1a202c;
+      border-color: #4a5568;
+    }
+
+    .preview-thumbnail {
+      width: 100%;
+      height: 80px;
+      object-fit: cover;
+      border-radius: 6px;
+      border: 2px solid #e2e8f0;
+      cursor: pointer;
+      margin-bottom: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: white;
+    }
+
+    body.dark-mode .preview-thumbnail {
+      background: #1a202c;
+      border-color: #4a5568;
+    }
+
+    .preview-icon {
+      font-size: 48px;
+      text-align: center;
+    }
+
+    .preview-error {
+      text-align: center;
+      padding: 20px;
+      color: #718096;
+      font-size: 12px;
+    }
+
+    body.dark-mode .preview-error {
+      color: #a0aec0;
+    }
+
+    /* Raw Editor */
+    .raw-editor-toolbar {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+
+    .btn-raw-action {
+      padding: 10px 20px;
+      background: #667eea;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .btn-raw-action:hover {
+      background: #5568d3;
+      transform: translateY(-2px);
+    }
+
+    #rawEditor {
+      width: 100%;
+      min-height: 400px;
+      padding: 16px;
+      border: 2px solid #e2e8f0;
+      border-radius: 8px;
+      font-family: 'Courier New', monospace;
+      font-size: 14px;
+      line-height: 1.6;
+      resize: vertical;
+      background: white;
+      color: #2d3748;
+    }
+
+    body.dark-mode #rawEditor {
+      background: #1a202c;
+      border-color: #4a5568;
+      color: #e2e8f0;
+    }
+
+    #rawEditor:focus {
+      outline: none;
+      border-color: #667eea;
+      box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    }
+
+    /* Form Actions */
+    .form-actions {
+      display: flex;
+      gap: 12px;
+      justify-content: flex-end;
+      margin-top: 24px;
+    }
+
+    .btn-cancel {
+      padding: 12px 24px;
+      background: white;
+      border: 2px solid #e2e8f0;
+      color: #4a5568;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    body.dark-mode .btn-cancel {
+      background: #1a202c;
+      border-color: #4a5568;
+      color: #cbd5e0;
+    }
+
+    .btn-cancel:hover {
+      background: #f7fafc;
+      transform: translateY(-2px);
+    }
+
+    body.dark-mode .btn-cancel:hover {
+      background: #2d3748;
+    }
+
+    .btn-submit {
+      padding: 12px 32px;
+      background: #48bb78;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .btn-submit:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 20px rgba(72, 187, 120, 0.3);
+      background: #38a169;
+    }
+
+    /* Toast Notification */
+    .toast {
+      position: fixed;
+      bottom: -100px;
+      right: 32px;
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+      padding: 20px 24px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      z-index: 3000;
+      transition: bottom 0.3s ease;
+      min-width: 320px;
+    }
+
+    body.dark-mode .toast {
+      background: #2d3748;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+    }
+
+    .toast.active {
+      bottom: 32px;
+    }
+
+    .toast-icon {
+      font-size: 28px;
+    }
+
+    .toast-content {
+      flex: 1;
+    }
+
+    .toast-title {
+      font-size: 16px;
+      font-weight: 700;
+      margin-bottom: 4px;
+      color: #2d3748;
+    }
+
+    body.dark-mode .toast-title {
+      color: #e2e8f0;
+    }
+
+    .toast-message {
+      font-size: 14px;
+      color: #718096;
+    }
+
+    body.dark-mode .toast-message {
+      color: #a0aec0;
+    }
+
+    /* User Stories View */
+    .user-stories-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+      gap: 20px;
+      margin-bottom: 32px;
+    }
+
+    .story-card {
+      background: white;
+      border-radius: 12px;
+      padding: 20px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+      transition: all 0.2s;
+      border-left: 4px solid #667eea;
+    }
+
+    body.dark-mode .story-card {
+      background: #2d3748;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+    }
+
+    .story-card.no-tests {
+      border-left-color: #fc8181;
+    }
+
+    .story-card.has-tests {
+      border-left-color: #48bb78;
+    }
+
+    .story-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+    }
+
+    .story-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      margin-bottom: 12px;
+    }
+
+    .story-id {
+      font-size: 12px;
+      font-weight: 700;
+      color: #667eea;
+      background: rgba(102, 126, 234, 0.1);
+      padding: 4px 8px;
+      border-radius: 4px;
+    }
+
+    .story-status {
+      font-size: 11px;
+      padding: 4px 8px;
+      border-radius: 4px;
+      font-weight: 600;
+    }
+
+    .story-status.active {
+      background: #c6f6d5;
+      color: #22543d;
+    }
+
+    .story-status.inprogress {
+      background: #fef3c7;
+      color: #78350f;
+    }
+
+    body.dark-mode .story-status.active {
+      background: #22543d;
+      color: #c6f6d5;
+    }
+
+    body.dark-mode .story-status.inprogress {
+      background: #78350f;
+      color: #fef3c7;
+    }
+
+    .story-title {
+      font-size: 16px;
+      font-weight: 700;
+      color: #2d3748;
+      margin-bottom: 8px;
+      line-height: 1.4;
+    }
+
+    body.dark-mode .story-title {
+      color: #e2e8f0;
+    }
+
+    .story-meta {
+      display: flex;
+      gap: 12px;
+      font-size: 12px;
+      color: #718096;
+      margin-bottom: 16px;
+    }
+
+    body.dark-mode .story-meta {
+      color: #a0aec0;
+    }
+
+    .story-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 4px 8px;
+      background: #f7fafc;
+      border-radius: 4px;
+      font-weight: 600;
+    }
+
+    body.dark-mode .story-badge {
+      background: #1a202c;
+    }
+
+    .story-actions {
+      display: flex;
+      gap: 8px;
+    }
+
+    .btn-story-action {
+      flex: 1;
+      padding: 8px 12px;
+      border: 2px solid #e2e8f0;
+      border-radius: 6px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      background: white;
+      color: #4a5568;
+    }
+
+    body.dark-mode .btn-story-action {
+      background: #1a202c;
+      border-color: #4a5568;
+      color: #cbd5e0;
+    }
+
+    .btn-story-action:hover {
+      border-color: #667eea;
+      color: #667eea;
+      transform: translateY(-2px);
+    }
+
+    .btn-story-action.primary {
+      background: #667eea;
+      color: white;
+      border-color: #667eea;
+    }
+
+    .btn-story-action.primary:hover {
+      background: #5568d3;
+    }
+
+    .filter-bar {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 24px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+
+    .filter-btn {
+      padding: 10px 20px;
+      background: white;
+      border: 2px solid #e2e8f0;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 600;
+      color: #4a5568;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    body.dark-mode .filter-btn {
+      background: #2d3748;
+      border-color: #4a5568;
+      color: #cbd5e0;
+    }
+
+    .filter-btn:hover,
+    .filter-btn.active {
+      background: #667eea;
+      color: white;
+      border-color: #667eea;
+    }
+
+    .search-box {
+      flex: 1;
+      min-width: 250px;
+      padding: 10px 16px;
+      border: 2px solid #e2e8f0;
+      border-radius: 8px;
+      font-size: 14px;
+      background: white;
+      color: #2d3748;
+    }
+
+    body.dark-mode .search-box {
+      background: #2d3748;
+      border-color: #4a5568;
+      color: #e2e8f0;
+    }
+
+    .search-box:focus {
+      outline: none;
+      border-color: #667eea;
+    }
+
+    .step-action,
+    .step-expected {
+      width: 100%;
+      padding: 10px 12px;
+      border: 2px solid #e2e8f0;
+      border-radius: 8px;
+      font-size: 13px;
+      font-family: inherit;
+      transition: all 0.2s;
+      background: white;
+      color: #2d3748;
+      min-height: 70px;
+      resize: vertical;
+      line-height: 1.5;
+    }
+
+    body.dark-mode .step-action,
+    body.dark-mode .step-expected {
+      background: #1a202c;
+      border-color: #4a5568;
+      color: #e2e8f0;
+    }
+
+    .step-action:focus,
+    .step-expected:focus {
+      outline: none;
+      border-color: #667eea;
+      box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    }
+
+    /* Scrollbar Styling */
+    ::-webkit-scrollbar {
+      width: 8px;
+      height: 8px;
+    }
+
+    ::-webkit-scrollbar-track {
+      background: #f1f1f1;
+    }
+
+    body.dark-mode ::-webkit-scrollbar-track {
+      background: #1a202c;
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: #cbd5e0;
+      border-radius: 4px;
+    }
+
+    body.dark-mode ::-webkit-scrollbar-thumb {
+      background: #4a5568;
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+      background: #a0aec0;
+    }
+  </style>
+  <style>@view-transition { navigation: auto; }</style>
+  <script src="/_sdk/data_sdk.js" type="text/javascript"></script>
+  <script src="https://cdn.tailwindcss.com" type="text/javascript"></script>
+ </head>
+ <body><!-- Login Screen -->
+  <div id="loginScreen">
+   <div class="login-container">
+    <div class="login-logo">
+     🧪
+    </div>
+    <h1 class="login-title">BOLTEST</h1>
+    <p class="login-subtitle">Test Case Management System for TFS • Built by Shaul Gon Leven</p>
+    <form id="loginForm">
+     <div class="form-group"><label class="form-label" for="orgName">Organization Name</label> <input type="text" id="orgName" class="form-input" placeholder="your-organization" required>
+     </div>
+     <div class="form-group"><label class="form-label" for="projectName">Project Name</label> <input type="text" id="projectName" class="form-input" placeholder="your-project" required>
+     </div>
+     <div class="form-group"><label class="form-label" for="patToken">Personal Access Token</label> <input type="password" id="patToken" class="form-input" placeholder="Enter your PAT" required>
+     </div><button type="submit" class="btn-primary">🔐 Connect to TFS</button>
+    </form>
+   </div>
+  </div><!-- App Layout -->
+  <div id="appLayout"><!-- Sidebar -->
+   <aside class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+     <div class="sidebar-logo"><span class="sidebar-logo-icon">🧪</span> <span class="sidebar-logo-text">BOLTEST</span>
+     </div>
+     <div class="sidebar-project"><span>📁</span> <span id="sidebarProject">Project Name</span>
+     </div>
+    </div>
+    <nav class="sidebar-nav">
+     <div class="nav-item active" onclick="navigateTo('dashboard')"><span class="nav-item-icon">📊</span> <span>Dashboard</span>
+     </div>
+     <div class="nav-item" onclick="navigateTo('myStories')"><span class="nav-item-icon">👤</span> <span>My User Stories</span>
+     </div>
+     <div class="nav-item" onclick="navigateTo('teamTests')"><span class="nav-item-icon">👥</span> <span>Team Tests</span>
+     </div>
+     <div class="nav-item" onclick="navigateTo('create')"><span class="nav-item-icon">➕</span> <span>Create Test Case</span>
+     </div>
+     <div class="nav-item" onclick="navigateTo('api')"><span class="nav-item-icon">⚡</span> <span>API Runner</span>
+     </div>
+    </nav>
+    <div class="sidebar-footer">
+     <div class="settings-row"><span class="settings-label">🌙 Dark Mode</span>
+      <div class="toggle-switch" onclick="toggleDarkMode()"></div>
+     </div><button class="btn-logout" onclick="handleLogout()"> <span>🚪</span> <span>Logout</span> </button>
+    </div>
+   </aside><!-- Main Content -->
+   <main class="main-content"><button class="btn-toggle-sidebar" onclick="toggleSidebar()" title="Toggle Menu">☰</button>
+    <header class="main-header" id="mainHeader">
+     <h1 class="page-title" id="pageTitle">Dashboard</h1>
+     <div class="header-actions"><button class="btn-icon" onclick="toggleHeader()" title="Collapse Header">⬆️</button> <button class="btn-icon" title="Refresh">🔄</button> <button class="btn-icon" title="Settings">⚙️</button>
+     </div>
+    </header>
+    <div id="contentArea"><!-- Dashboard View -->
+     <div id="dashboardView">
+      <div class="stats-grid">
+       <div class="stat-card">
+        <div class="stat-icon">
+         🧪
+        </div>
+        <div class="stat-label">
+         Total Test Cases
+        </div>
+        <div class="stat-value">
+         127
+        </div>
+       </div>
+       <div class="stat-card">
+        <div class="stat-icon">
+         ✅
+        </div>
+        <div class="stat-label">
+         Passed
+        </div>
+        <div class="stat-value">
+         89
+        </div>
+       </div>
+       <div class="stat-card">
+        <div class="stat-icon">
+         ❌
+        </div>
+        <div class="stat-label">
+         Failed
+        </div>
+        <div class="stat-value">
+         12
+        </div>
+       </div>
+       <div class="stat-card">
+        <div class="stat-icon">
+         ⏳
+        </div>
+        <div class="stat-label">
+         In Progress
+        </div>
+        <div class="stat-value">
+         26
+        </div>
+       </div>
+      </div>
+      <div class="recent-section">
+       <h2 class="section-title">📌 Recent Test Cases</h2>
+       <ul class="recent-list">
+        <li class="recent-item">
+         <div>
+          <div class="recent-item-title">
+           TC 1.1 – Login with User Credentials
+          </div>
+          <div class="recent-item-meta">
+           Created 2 hours ago • Status: Active
+          </div>
+         </div><span style="font-size: 20px;">✅</span></li>
+        <li class="recent-item">
+         <div>
+          <div class="recent-item-title">
+           TC 2.1 – Create New PL Account
+          </div>
+          <div class="recent-item-meta">
+           Created 5 hours ago • Status: In Review
+          </div>
+         </div><span style="font-size: 20px;">⏳</span></li>
+        <li class="recent-item">
+         <div>
+          <div class="recent-item-title">
+           TC 3.1 – Complete Asset and Requester Details
+          </div>
+          <div class="recent-item-meta">
+           Created yesterday • Status: Active
+          </div>
+         </div><span style="font-size: 20px;">✅</span></li>
+       </ul>
+      </div>
+     </div><!-- My User Stories View -->
+     <div id="myStoriesView" class="hidden">
+      <div class="filter-bar"><button class="filter-btn active" onclick="filterStories('all')"> <span>📋</span> <span>All Stories</span> </button> <button class="filter-btn" onclick="filterStories('noTests')"> <span>❌</span> <span>No Tests</span> </button> <button class="filter-btn" onclick="filterStories('hasTests')"> <span>✅</span> <span>Has Tests</span> </button>
+       <div style="position: relative;"><button class="filter-btn" onclick="toggleGroupMenu()" id="groupFilterBtn"> <span>🏷️</span> <span>Filter by Group</span> <span>▼</span> </button>
+        <div id="groupMenu" style="display: none; position: absolute; top: 100%; left: 0; margin-top: 8px; background: white; border: 2px solid #e2e8f0; border-radius: 8px; box-shadow: 0 8px 24px rgba(0,0,0,0.15); min-width: 250px; z-index: 1000;">
+         <div style="padding: 12px; border-bottom: 2px solid #e2e8f0;">
+          <div style="font-weight: 700; font-size: 14px; color: #2d3748;">
+           Select Group
+          </div>
+         </div><button onclick="filterByGroup('all')" style="width: 100%; padding: 12px 16px; background: white; border: none; text-align: left; cursor: pointer; font-size: 14px; color: #4a5568; transition: background 0.2s; display: flex; align-items: center; gap: 8px;" onmouseover="this.style.background='#f7fafc'" onmouseout="this.style.background='white'"> <span>📋</span> <span>All Groups</span> </button> <button onclick="filterByGroup('authentication')" style="width: 100%; padding: 12px 16px; background: white; border: none; text-align: left; cursor: pointer; font-size: 14px; color: #4a5568; transition: background 0.2s; display: flex; align-items: center; gap: 8px;" onmouseover="this.style.background='#f7fafc'" onmouseout="this.style.background='white'"> <span>🔐</span> <span>Authentication</span> </button> <button onclick="filterByGroup('account')" style="width: 100%; padding: 12px 16px; background: white; border: none; text-align: left; cursor: pointer; font-size: 14px; color: #4a5568; transition: background 0.2s; display: flex; align-items: center; gap: 8px;" onmouseover="this.style.background='#f7fafc'" onmouseout="this.style.background='white'"> <span>👤</span> <span>Account Management</span> </button> <button onclick="filterByGroup('forms')" style="width: 100%; padding: 12px 16px; background: white; border: none; text-align: left; cursor: pointer; font-size: 14px; color: #4a5568; transition: background 0.2s; display: flex; align-items: center; gap: 8px;" onmouseover="this.style.background='#f7fafc'" onmouseout="this.style.background='white'"> <span>📝</span> <span>Forms &amp; Submissions</span> </button> <button onclick="filterByGroup('documents')" style="width: 100%; padding: 12px 16px; background: white; border: none; text-align: left; cursor: pointer; font-size: 14px; color: #4a5568; transition: background 0.2s; display: flex; align-items: center; gap: 8px;" onmouseover="this.style.background='#f7fafc'" onmouseout="this.style.background='white'"> <span>📄</span> <span>Documents</span> </button> <button onclick="filterByGroup('notifications')" style="width: 100%; padding: 12px 16px; background: white; border: none; text-align: left; cursor: pointer; font-size: 14px; color: #4a5568; transition: background 0.2s; display: flex; align-items: center; gap: 8px;" onmouseover="this.style.background='#f7fafc'" onmouseout="this.style.background='white'"> <span>📧</span> <span>Notifications</span> </button>
+        </div>
+       </div>
+       <div style="position: relative;"><button class="filter-btn" onclick="toggleTeamMenu()" id="teamFilterBtn"> <span>👥</span> <span>Filter by Team</span> <span>▼</span> </button>
+        <div id="teamMenu" style="display: none; position: absolute; top: 100%; left: 0; margin-top: 8px; background: white; border: 2px solid #e2e8f0; border-radius: 8px; box-shadow: 0 8px 24px rgba(0,0,0,0.15); min-width: 300px; z-index: 1000; max-height: 400px; overflow-y: auto;">
+         <div style="padding: 12px; border-bottom: 2px solid #e2e8f0;"><input type="text" id="teamSearchInput" placeholder="🔍 Search team member..." oninput="searchTeamMembers(this.value)" style="width: 100%; padding: 8px; border: 1px solid #e2e8f0; border-radius: 6px; font-size: 13px;">
+         </div><button onclick="filterByTeam('all')" style="width: 100%; padding: 12px 16px; background: white; border: none; text-align: left; cursor: pointer; font-size: 14px; color: #4a5568; transition: background 0.2s; display: flex; align-items: center; gap: 8px;" onmouseover="this.style.background='#f7fafc'" onmouseout="this.style.background='white'"> <span>���</span> <span>All Teams</span> </button> <button onclick="filterByTeam('Abigail')" class="team-member-btn" data-member="abigail" data-team="Epos\RnD\Abigail's Team" style="width: 100%; padding: 12px 16px; background: white; border: none; text-align: left; cursor: pointer; font-size: 14px; color: #4a5568; transition: background 0.2s; display: flex; flex-direction: column; align-items: flex-start; gap: 4px;" onmouseover="this.style.background='#f7fafc'" onmouseout="this.style.background='white'">
+          <div style="display: flex; align-items: center; gap: 8px;"><span>👤</span> <span style="font-weight: 600;">Abigail</span>
+          </div><span style="font-size: 11px; color: #718096; padding-left: 28px;">Epos\RnD\Abigail's Team</span> </button> <button onclick="filterByTeam('Rina')" class="team-member-btn" data-member="rina" data-team="Epos\RnD\Rina's Team" style="width: 100%; padding: 12px 16px; background: white; border: none; text-align: left; cursor: pointer; font-size: 14px; color: #4a5568; transition: background 0.2s; display: flex; flex-direction: column; align-items: flex-start; gap: 4px;" onmouseover="this.style.background='#f7fafc'" onmouseout="this.style.background='white'">
+          <div style="display: flex; align-items: center; gap: 8px;"><span>👤</span> <span style="font-weight: 600;">Rina</span>
+          </div><span style="font-size: 11px; color: #718096; padding-left: 28px;">Epos\RnD\Rina's Team</span> </button> <button onclick="filterByTeam('David')" class="team-member-btn" data-member="david" data-team="Epos\RnD\David's Team" style="width: 100%; padding: 12px 16px; background: white; border: none; text-align: left; cursor: pointer; font-size: 14px; color: #4a5568; transition: background 0.2s; display: flex; flex-direction: column; align-items: flex-start; gap: 4px;" onmouseover="this.style.background='#f7fafc'" onmouseout="this.style.background='white'">
+          <div style="display: flex; align-items: center; gap: 8px;"><span>👤</span> <span style="font-weight: 600;">David</span>
+          </div><span style="font-size: 11px; color: #718096; padding-left: 28px;">Epos\RnD\David's Team</span> </button> <button onclick="filterByTeam('Sarah')" class="team-member-btn" data-member="sarah" data-team="Epos\QA\Sarah's Team" style="width: 100%; padding: 12px 16px; background: white; border: none; text-align: left; cursor: pointer; font-size: 14px; color: #4a5568; transition: background 0.2s; display: flex; flex-direction: column; align-items: flex-start; gap: 4px;" onmouseover="this.style.background='#f7fafc'" onmouseout="this.style.background='white'">
+          <div style="display: flex; align-items: center; gap: 8px;"><span>👤</span> <span style="font-weight: 600;">Sarah</span>
+          </div><span style="font-size: 11px; color: #718096; padding-left: 28px;">Epos\QA\Sarah's Team</span> </button> <button onclick="filterByTeam('Michael')" class="team-member-btn" data-member="michael" data-team="Epos\DevOps\Michael's Team" style="width: 100%; padding: 12px 16px; background: white; border: none; text-align: left; cursor: pointer; font-size: 14px; color: #4a5568; transition: background 0.2s; display: flex; flex-direction: column; align-items: flex-start; gap: 4px;" onmouseover="this.style.background='#f7fafc'" onmouseout="this.style.background='white'">
+          <div style="display: flex; align-items: center; gap: 8px;"><span>👤</span> <span style="font-weight: 600;">Michael</span>
+          </div><span style="font-size: 11px; color: #718096; padding-left: 28px;">Epos\DevOps\Michael's Team</span> </button>
+        </div>
+       </div><input type="text" class="search-box" placeholder="🔍 Search user stories..." oninput="searchStories(this.value)">
+      </div>
+      <div class="user-stories-grid" id="storiesGrid"><!-- Sample User Stories with team info -->
+       <div class="story-card has-tests" data-has-tests="true" data-group="authentication" data-team="Abigail">
+        <div class="story-header"><span class="story-id">US-12345</span> <span class="story-status active">Active</span>
+        </div>
+        <h3 class="story-title">User Login and Authentication Flow</h3>
+        <div class="story-meta"><span class="story-badge">🔐 <span>Authentication</span></span> <span class="story-badge">🧪 <span>3 Tests</span></span> <span class="story-badge">👤 <span>Abigail's Team</span></span>
+        </div>
+        <div class="story-actions"><button class="btn-story-action primary" onclick="addTestToStory('US-12345')"> <span>➕</span> <span>Add Test</span> </button> <button class="btn-story-action" onclick="viewStoryTests('US-12345')"> <span>👁️</span> <span>View Tests</span> </button>
+        </div>
+       </div>
+       <div class="story-card no-tests" data-has-tests="false" data-group="account" data-team="Rina">
+        <div class="story-header"><span class="story-id">US-12346</span> <span class="story-status inprogress">In Progress</span>
+        </div>
+        <h3 class="story-title">PL Account Creation Module</h3>
+        <div class="story-meta"><span class="story-badge">👤 <span>Account Management</span></span> <span class="story-badge">❌ <span>No Tests</span></span> <span class="story-badge">👤 <span>Rina's Team</span></span>
+        </div>
+        <div class="story-actions"><button class="btn-story-action primary" onclick="addTestToStory('US-12346')"> <span>➕</span> <span>Add Test</span> </button>
+        </div>
+       </div>
+       <div class="story-card has-tests" data-has-tests="true" data-group="forms" data-team="Abigail">
+        <div class="story-header"><span class="story-id">US-12347</span> <span class="story-status active">Active</span>
+        </div>
+        <h3 class="story-title">Asset and Requester Details Form Validation</h3>
+        <div class="story-meta"><span class="story-badge">📝 <span>Forms &amp; Submissions</span></span> <span class="story-badge">🧪 <span>5 Tests</span></span> <span class="story-badge">👤 <span>Abigail's Team</span></span>
+        </div>
+        <div class="story-actions"><button class="btn-story-action primary" onclick="addTestToStory('US-12347')"> <span>➕</span> <span>Add Test</span> </button> <button class="btn-story-action" onclick="viewStoryTests('US-12347')"> <span>👁️</span> <span>View Tests</span> </button>
+        </div>
+       </div>
+       <div class="story-card no-tests" data-has-tests="false" data-group="documents" data-team="David">
+        <div class="story-header"><span class="story-id">US-12348</span> <span class="story-status active">Active</span>
+        </div>
+        <h3 class="story-title">Upload and Manage Documents</h3>
+        <div class="story-meta"><span class="story-badge">📄 <span>Documents</span></span> <span class="story-badge">❌ <span>No Tests</span></span> <span class="story-badge">👤 <span>David's Team</span></span>
+        </div>
+        <div class="story-actions"><button class="btn-story-action primary" onclick="addTestToStory('US-12348')"> <span>➕</span> <span>Add Test</span> </button>
+        </div>
+       </div>
+       <div class="story-card has-tests" data-has-tests="true" data-group="notifications" data-team="Sarah">
+        <div class="story-header"><span class="story-id">US-12349</span> <span class="story-status active">Active</span>
+        </div>
+        <h3 class="story-title">Email Notification System</h3>
+        <div class="story-meta"><span class="story-badge">��� <span>Notifications</span></span> <span class="story-badge">🧪 <span>2 Tests</span></span> <span class="story-badge">👤 <span>Sarah's Team</span></span>
+        </div>
+        <div class="story-actions"><button class="btn-story-action primary" onclick="addTestToStory('US-12349')"> <span>➕</span> <span>Add Test</span> </button> <button class="btn-story-action" onclick="viewStoryTests('US-12349')"> <span>👁️</span> <span>View Tests</span> </button>
+        </div>
+       </div>
+      </div>
+     </div><!-- Team Tests View -->
+     <div id="teamTestsView" class="hidden">
+      <div class="filter-bar"><button class="filter-btn active"> <span>���</span> <span>All Tests</span> </button> <button class="filter-btn"> <span>✅</span> <span>Passed</span> </button> <button class="filter-btn"> <span>❌</span> <span>Failed</span> </button> <button class="filter-btn"> <span>⏳</span> <span>In Progress</span> </button> <input type="text" class="search-box" placeholder="🔍 Search team tests...">
+      </div>
+      <div class="recent-section">
+       <h2 class="section-title">👥 Team Test Cases (24)</h2>
+       <ul class="recent-list">
+        <li class="recent-item">
+         <div>
+          <div class="recent-item-title">
+           TC 1.1 – Login with User Credentials
+          </div>
+          <div class="recent-item-meta">
+           Created by Sarah Cohen • 2 hours ago • Status: Passed
+          </div>
+         </div><span style="font-size: 20px;">✅</span></li>
+        <li class="recent-item">
+         <div>
+          <div class="recent-item-title">
+           TC 2.1 – Create New PL Account
+          </div>
+          <div class="recent-item-meta">
+           Created by David Levi • 5 hours ago • Status: In Review
+          </div>
+         </div><span style="font-size: 20px;">⏳</span></li>
+        <li class="recent-item">
+         <div>
+          <div class="recent-item-title">
+           TC 3.1 – Complete Asset Details
+          </div>
+          <div class="recent-item-meta">
+           Created by Rachel Mizrahi • Yesterday • Status: Passed
+          </div>
+         </div><span style="font-size: 20px;">✅</span></li>
+        <li class="recent-item">
+         <div>
+          <div class="recent-item-title">
+           TC 4.1 ��� Upload Supporting Documents
+          </div>
+          <div class="recent-item-meta">
+           Created by You • 2 days ago • Status: Failed
+          </div>
+         </div><span style="font-size: 20px;">❌</span></li>
+       </ul>
+      </div>
+     </div><!-- Create Test Case View -->
+     <div id="createView" class="hidden">
+      <form id="testCaseForm"><!-- Basic Info Card -->
+       <div class="form-card">
+        <div class="card-header">
+         <h2 class="card-title">📋 Basic Information</h2><button type="button" class="btn-secondary" onclick="openTemplatesModal()"> <span>📄</span> <span>Load Template</span> </button>
+        </div>
+        <div class="form-row">
+         <div class="form-group form-group-full"><label class="form-label" for="testTitle">Test Case Title</label> <input type="text" id="testTitle" class="form-input" placeholder="e.g., TC 1.1 – Login with User Credentials" required>
+         </div>
+        </div>
+        <div class="form-row">
+         <div class="form-group form-group-full"><label class="form-label" for="testDescription">Description</label> <input type="text" id="testDescription" class="form-input" placeholder="Detailed description of what this test case validates..." required>
+         </div>
+        </div><!-- Compact Fields Row -->
+        <div class="compact-fields-row">
+         <div class="form-group-compact"><label class="form-label-compact" for="testState">State</label> <select id="testState" class="form-input-compact"> <option value="Design">Design</option> <option value="Ready">Ready</option> <option value="Closed">Closed</option> </select>
+         </div>
+         <div class="form-group-compact"><label class="form-label-compact" for="testPriority">Priority</label> <select id="testPriority" class="form-input-compact"> <option value="1">1 - Critical</option> <option value="2" selected>2 - High</option> <option value="3">3 - Medium</option> <option value="4">4 - Low</option> </select>
+         </div>
+         <div class="form-group-compact"><label class="form-label-compact" for="testDesign">Assigned To</label> <input type="text" id="testDesign" class="form-input-compact" placeholder="QA Name">
+         </div>
+         <div class="form-group-compact"><label class="form-label-compact" for="testArea">Area Path</label> <input type="text" id="testArea" class="form-input-compact" placeholder="Project\\Area">
+         </div>
+         <div class="form-group-compact"><label class="form-label-compact" for="testIteration">Iteration</label> <input type="text" id="testIteration" class="form-input-compact" placeholder="Sprint 1">
+         </div>
+        </div>
+       </div><!-- Test Steps Card -->
+       <div class="form-card">
+        <div class="card-header">
+         <h2 class="card-title">🔢 Test Steps</h2>
+         <div class="steps-mode-tabs"><button type="button" class="steps-mode-tab active" onclick="switchStepsMode('visual')">Visual Editor</button> <button type="button" class="steps-mode-tab" onclick="switchStepsMode('raw')">Raw Text</button>
+         </div>
+        </div>
+        <div class="steps-editor-container"><!-- Visual Editor -->
+         <div id="visualEditor">
+          <div class="steps-toolbar"><button type="button" class="btn-add-step" onclick="addTestStep()"> <span>➕</span> <span>Add Step</span> </button> <span style="font-size: 13px; color: #718096;">💡 Drag steps to reorder</span>
+          </div>
+          <div id="stepsGrid" class="steps-grid"><!-- Steps will be added dynamically -->
+          </div>
+         </div><!-- Raw Editor -->
+         <div id="rawEditorContainer">
+          <div class="raw-editor-toolbar"><button type="button" class="btn-raw-action" onclick="parseRawSteps()"> <span>📥</span> <span>Import Steps</span> </button> <button type="button" class="btn-raw-action" onclick="exportToRaw()"> <span>📤</span> <span>Export from Visual</span> </button>
+          </div><textarea id="rawEditor" placeholder="Paste your test steps here in this format:
+
+TITLE Test Case Title
+DESCRIPTION Test case description
+
+Step 1:
+  Action: Navigate to login page
+  Expected: Login page loads successfully
+
+Step 2:
+  Action: Enter credentials
+  Expected: Credentials are accepted
+  Data: username=test, password=test123"></textarea>
+         </div>
+        </div>
+       </div><!-- Form Actions -->
+       <div class="form-actions"><button type="button" class="btn-cancel" onclick="handleCancel()">Cancel</button> <button type="button" class="btn-secondary" onclick="extractTestCase()" style="margin-left: auto; margin-right: 12px;"> <span>📋</span> <span>Extract Sections</span> </button> <button type="submit" class="btn-submit"> <span>💾</span> <span>Save Test Case</span> </button>
+       </div>
+      </form>
+     </div>
+    </div>
+   </main>
+  </div><!-- Toast Notification -->
+  <div id="toast" class="toast">
+   <div class="toast-icon" id="toastIcon">
+    ✅
+   </div>
+   <div class="toast-content">
+    <div class="toast-title" id="toastTitle">
+     Success!
+    </div>
+    <div class="toast-message" id="toastMessage">
+     Operation completed successfully
+    </div>
+   </div>
+  </div>
+  <script>
+    let projectName = '';
+    let stepCounter = 0;
+    let draggedStep = null;
+    let currentFocusedTextarea = null;
+    
+    const defaultConfig = {
+      app_title: 'BOLTEST'
+    };
+
+    // Handle Login
+    document.getElementById('loginForm').addEventListener('submit', function(e) {
+      e.preventDefault();
+      
+      const org = document.getElementById('orgName').value;
+      projectName = document.getElementById('projectName').value;
+      const pat = document.getElementById('patToken').value;
+      
+      localStorage.setItem('projectName', projectName);
+      document.getElementById('sidebarProject').textContent = projectName;
+      
+      document.getElementById('loginScreen').style.display = 'none';
+      document.getElementById('appLayout').classList.add('active');
+      
+      showToast('✅', 'Connected!', `Successfully connected to ${projectName}`);
+    });
+
+    // Handle Logout
+    function handleLogout() {
+      localStorage.removeItem('projectName');
+      document.getElementById('loginScreen').style.display = 'flex';
+      document.getElementById('appLayout').classList.remove('active');
+      document.getElementById('loginForm').reset();
+      showToast('👋', 'Logged Out', 'Successfully logged out of the system');
+    }
+
+    // Toggle Dark Mode
+    function toggleDarkMode() {
+      document.body.classList.toggle('dark-mode');
+      const toggle = document.querySelector('.toggle-switch');
+      toggle.classList.toggle('active');
+      
+      const isDark = document.body.classList.contains('dark-mode');
+      localStorage.setItem('darkMode', isDark ? 'enabled' : 'disabled');
+      
+      showToast('🌙', isDark ? 'Dark Mode Enabled' : 'Light Mode Enabled', `Switched to ${isDark ? 'dark' : 'light'} mode`);
+    }
+    
+    // Toggle Sidebar
+    function toggleSidebar() {
+      const sidebar = document.getElementById('sidebar');
+      sidebar.classList.toggle('collapsed');
+      
+      const isCollapsed = sidebar.classList.contains('collapsed');
+      localStorage.setItem('sidebarCollapsed', isCollapsed ? 'true' : 'false');
+      
+      showToast('☰', isCollapsed ? 'Menu Hidden' : 'Menu Visible', `Sidebar ${isCollapsed ? 'collapsed' : 'expanded'}`);
+    }
+
+    // Navigate Between Views
+    function navigateTo(view) {
+      document.querySelectorAll('#contentArea > div').forEach(el => {
+        el.classList.add('hidden');
+      });
+      
+      const viewMap = {
+        'dashboard': { el: 'dashboardView', title: 'Dashboard' },
+        'myStories': { el: 'myStoriesView', title: 'My User Stories' },
+        'teamTests': { el: 'teamTestsView', title: 'Team Tests' },
+        'create': { el: 'createView', title: 'Create Test Case' },
+        'api': { el: 'createView', title: 'API Runner' }
+      };
+      
+      if (viewMap[view]) {
+        document.getElementById(viewMap[view].el).classList.remove('hidden');
+        document.getElementById('pageTitle').textContent = viewMap[view].title;
+      }
+      
+      document.querySelectorAll('.nav-item').forEach(item => {
+        item.classList.remove('active');
+      });
+      if (event && event.currentTarget) {
+        event.currentTarget.classList.add('active');
+      }
+    }
+
+    // Toggle Header
+    function toggleHeader() {
+      const header = document.getElementById('mainHeader');
+      header.classList.toggle('collapsed');
+      const btn = event.currentTarget;
+      btn.textContent = header.classList.contains('collapsed') ? '⬇️' : '⬆️';
+      btn.title = header.classList.contains('collapsed') ? 'Expand Header' : 'Collapse Header';
+    }
+
+    // Filter Stories
+    function filterStories(filter) {
+      const cards = document.querySelectorAll('.story-card');
+      const buttons = document.querySelectorAll('.filter-bar .filter-btn');
+      
+      buttons.forEach(btn => btn.classList.remove('active'));
+      if (event && event.currentTarget) {
+        event.currentTarget.classList.add('active');
+      }
+      
+      cards.forEach(card => {
+        if (filter === 'all') {
+          card.style.display = 'block';
+        } else if (filter === 'noTests') {
+          card.style.display = card.dataset.hasTests === 'false' ? 'block' : 'none';
+        } else if (filter === 'hasTests') {
+          card.style.display = card.dataset.hasTests === 'true' ? 'block' : 'none';
+        }
+      });
+    }
+
+    // Search Stories
+    function searchStories(query) {
+      const cards = document.querySelectorAll('.story-card');
+      const lowerQuery = query.toLowerCase();
+      
+      cards.forEach(card => {
+        const title = card.querySelector('.story-title').textContent.toLowerCase();
+        const id = card.querySelector('.story-id').textContent.toLowerCase();
+        card.style.display = (title.includes(lowerQuery) || id.includes(lowerQuery)) ? 'block' : 'none';
+      });
+    }
+
+    // Add Test to Story
+    function addTestToStory(storyId) {
+      navigateTo('create');
+      showToast('➕', 'Creating Test', `Creating test case for ${storyId}`);
+      setTimeout(() => {
+        document.getElementById('testTitle').value = `TC for ${storyId}`;
+        document.getElementById('testTitle').focus();
+      }, 300);
+    }
+
+    // View Story Tests
+    function viewStoryTests(storyId) {
+      showToast('👁️', 'Loading Tests', `Loading all tests for ${storyId}`);
+    }
+    
+    // Toggle Group Menu
+    function toggleGroupMenu() {
+      const menu = document.getElementById('groupMenu');
+      const teamMenu = document.getElementById('teamMenu');
+      const isVisible = menu.style.display === 'block';
+      
+      // Close team menu if open
+      if (teamMenu) teamMenu.style.display = 'none';
+      
+      menu.style.display = isVisible ? 'none' : 'block';
+    }
+    
+    // Toggle Team Menu
+    function toggleTeamMenu() {
+      const menu = document.getElementById('teamMenu');
+      const groupMenu = document.getElementById('groupMenu');
+      const isVisible = menu.style.display === 'block';
+      
+      // Close group menu if open
+      if (groupMenu) groupMenu.style.display = 'none';
+      
+      menu.style.display = isVisible ? 'none' : 'block';
+    }
+    
+    // Filter by Group
+    function filterByGroup(group) {
+      const cards = document.querySelectorAll('.story-card');
+      
+      cards.forEach(card => {
+        if (group === 'all') {
+          card.style.display = 'block';
+        } else {
+          card.style.display = card.dataset.group === group ? 'block' : 'none';
+        }
+      });
+      
+      const groupNames = {
+        'all': 'All Groups',
+        'authentication': 'Authentication',
+        'account': 'Account Management',
+        'forms': 'Forms & Submissions',
+        'documents': 'Documents',
+        'notifications': 'Notifications'
+      };
+      
+      document.getElementById('groupMenu').style.display = 'none';
+      showToast('🏷️', 'Filtered!', `Showing ${groupNames[group]}`);
+    }
+    
+    // Filter by Team
+    function filterByTeam(teamMember) {
+      const cards = document.querySelectorAll('.story-card');
+      
+      cards.forEach(card => {
+        if (teamMember === 'all') {
+          card.style.display = 'block';
+        } else {
+          card.style.display = card.dataset.team === teamMember ? 'block' : 'none';
+        }
+      });
+      
+      document.getElementById('teamMenu').style.display = 'none';
+      showToast('👥', 'Filtered!', `Showing ${teamMember === 'all' ? 'All Teams' : teamMember + "'s Team"}`);
+    }
+    
+    // Search Team Members
+    function searchTeamMembers(query) {
+      const buttons = document.querySelectorAll('.team-member-btn');
+      const lowerQuery = query.toLowerCase();
+      
+      buttons.forEach(btn => {
+        const memberName = btn.dataset.member;
+        const teamPath = btn.dataset.team;
+        const matchesMember = memberName && memberName.toLowerCase().includes(lowerQuery);
+        const matchesPath = teamPath && teamPath.toLowerCase().includes(lowerQuery);
+        
+        btn.style.display = (matchesMember || matchesPath) ? 'flex' : 'none';
+      });
+    }
+    
+    // Close menus when clicking outside
+    document.addEventListener('click', function(e) {
+      const groupMenu = document.getElementById('groupMenu');
+      const groupBtn = document.getElementById('groupFilterBtn');
+      const teamMenu = document.getElementById('teamMenu');
+      const teamBtn = document.getElementById('teamFilterBtn');
+      
+      if (groupMenu && groupBtn && !groupMenu.contains(e.target) && !groupBtn.contains(e.target)) {
+        groupMenu.style.display = 'none';
+      }
+      
+      if (teamMenu && teamBtn && !teamMenu.contains(e.target) && !teamBtn.contains(e.target)) {
+        teamMenu.style.display = 'none';
+      }
+      
+      // Close all formatting toolbars and dropdowns when clicking outside
+      const toolbars = document.querySelectorAll('.formatting-toolbar');
+      const dropdowns = document.querySelectorAll('.color-picker-dropdown, .size-picker-dropdown, .emoji-picker-dropdown');
+      
+      toolbars.forEach(toolbar => {
+        if (!toolbar.contains(e.target) && !e.target.classList.contains('step-action') && !e.target.classList.contains('step-expected')) {
+          toolbar.classList.remove('active');
+        }
+      });
+      
+      dropdowns.forEach(dropdown => {
+        if (!dropdown.contains(e.target) && !dropdown.previousElementSibling.contains(e.target)) {
+          dropdown.classList.remove('active');
+        }
+      });
+    });
+
+    // Show Formatting Toolbar on Focus
+    function showToolbar(textarea) {
+      // Hide all other toolbars
+      document.querySelectorAll('.formatting-toolbar').forEach(t => t.classList.remove('active'));
+      
+      // Show toolbar for this textarea
+      const wrapper = textarea.closest('.step-field-wrapper');
+      const toolbar = wrapper.querySelector('.formatting-toolbar');
+      if (toolbar) {
+        toolbar.classList.add('active');
+        currentFocusedTextarea = textarea;
+      }
+    }
+
+    // Format Text - Enhanced version
+    function formatText(format) {
+      if (!currentFocusedTextarea) return;
+      
+      const textarea = currentFocusedTextarea;
+      const start = textarea.selectionStart;
+      const end = textarea.selectionEnd;
+      const selectedText = textarea.value.substring(start, end);
+      
+      if (!selectedText) {
+        showToast('⚠️', 'No Selection', 'Please select text to format');
+        return;
+      }
+      
+      let formattedText = '';
+      const formatMap = {
+        'bold': `<b>${selectedText}</b>`,
+        'italic': `<i>${selectedText}</i>`,
+        'underline': `<u>${selectedText}</u>`,
+        'left': `<div align="left">${selectedText}</div>`,
+        'center': `<div align="center">${selectedText}</div>`,
+        'right': `<div align="right">${selectedText}</div>`,
+        'code': `<code>${selectedText}</code>`,
+        'list': `<ul><li>${selectedText}</li></ul>`,
+        'numlist': `<ol><li>${selectedText}</li></ol>`,
+        'link': `<a href="URL">${selectedText}</a>`,
+        'mention': `@${selectedText}`,
+        'tag': `#${selectedText}`
+      };
+      
+      formattedText = formatMap[format] || selectedText;
+      
+      textarea.value = textarea.value.substring(0, start) + formattedText + textarea.value.substring(end);
+      textarea.focus();
+      textarea.setSelectionRange(start, start + formattedText.length);
+      
+      syncToRawMode();
+      showToast('✨', 'Formatted!', `Applied ${format} formatting`);
+    }
+    
+    // Apply Color
+    function applyColor(color, isBackground) {
+      if (!currentFocusedTextarea) return;
+      
+      const textarea = currentFocusedTextarea;
+      const start = textarea.selectionStart;
+      const end = textarea.selectionEnd;
+      const selectedText = textarea.value.substring(start, end);
+      
+      if (!selectedText) {
+        showToast('⚠️', 'No Selection', 'Please select text to apply color');
+        return;
+      }
+      
+      const formattedText = isBackground 
+        ? `<span style="background-color:${color}">${selectedText}</span>`
+        : `<span style="color:${color}">${selectedText}</span>`;
+      
+      textarea.value = textarea.value.substring(0, start) + formattedText + textarea.value.substring(end);
+      textarea.focus();
+      textarea.setSelectionRange(start, start + formattedText.length);
+      
+      syncToRawMode();
+      showToast('🎨', 'Color Applied!', `Applied ${isBackground ? 'background' : 'text'} color`);
+    }
+    
+    // Apply Font Size
+    function applyFontSize(size) {
+      if (!currentFocusedTextarea) return;
+      
+      const textarea = currentFocusedTextarea;
+      const start = textarea.selectionStart;
+      const end = textarea.selectionEnd;
+      const selectedText = textarea.value.substring(start, end);
+      
+      if (!selectedText) {
+        showToast('⚠️', 'No Selection', 'Please select text to resize');
+        return;
+      }
+      
+      const formattedText = `<span style="font-size:${size}">${selectedText}</span>`;
+      
+      textarea.value = textarea.value.substring(0, start) + formattedText + textarea.value.substring(end);
+      textarea.focus();
+      textarea.setSelectionRange(start, start + formattedText.length);
+      
+      syncToRawMode();
+      showToast('📏', 'Size Applied!', `Applied font size ${size}`);
+    }
+    
+    // Insert Emoji
+    function insertEmoji(emoji) {
+      if (!currentFocusedTextarea) return;
+      
+      const textarea = currentFocusedTextarea;
+      const start = textarea.selectionStart;
+      const end = textarea.selectionEnd;
+      
+      textarea.value = textarea.value.substring(0, start) + emoji + textarea.value.substring(end);
+      textarea.focus();
+      textarea.setSelectionRange(start + emoji.length, start + emoji.length);
+      
+      syncToRawMode();
+      showToast('😊', 'Emoji Added!', 'Emoji inserted successfully');
+    }
+    
+    // Toggle Dropdown
+    function toggleDropdown(dropdownId) {
+      const dropdown = document.getElementById(dropdownId);
+      const allDropdowns = document.querySelectorAll('.color-picker-dropdown, .size-picker-dropdown, .emoji-picker-dropdown');
+      
+      allDropdowns.forEach(d => {
+        if (d.id !== dropdownId) {
+          d.classList.remove('active');
+        }
+      });
+      
+      dropdown.classList.toggle('active');
+    }
+
+    // Handle Attachment - Fixed with instant local preview
+    function handleAttachment(input) {
+      if (input.files && input.files[0]) {
+        const file = input.files[0];
+        const stepItem = input.closest('.step-item');
+        const previewContainer = stepItem.querySelector('.attachment-preview');
+        const fileNameSpan = stepItem.querySelector('.file-name');
+        const attachLabel = stepItem.querySelector('.attach-label');
+        const previewContent = stepItem.querySelector('.preview-content');
+        const viewBtn = stepItem.querySelector('.btn-view-full');
+        
+        // Create object URL for instant local preview
+        const fileUrl = URL.createObjectURL(file);
+        
+        // Store file reference on input element
+        input.dataset.fileUrl = fileUrl;
+        input.dataset.fileName = file.name;
+        input.dataset.fileType = file.type;
+        
+        // Update UI
+        attachLabel.textContent = '✓ Attached';
+        fileNameSpan.textContent = file.name;
+        previewContainer.style.display = 'block';
+        
+        // Clear existing preview
+        previewContent.innerHTML = '';
+        
+        // Create preview based on file type
+        if (file.type.startsWith('image/')) {
+          // Image preview
+          const img = document.createElement('img');
+          img.src = fileUrl;
+          img.alt = file.name;
+          img.style.cssText = 'width: 100%; height: 80px; object-fit: cover; border-radius: 6px; cursor: pointer;';
+          img.onclick = () => openFileInNewTab(fileUrl, file.name);
+          
+          img.onerror = function() {
+            previewContent.innerHTML = '<div class="preview-error"><div style="font-size: 32px; margin-bottom: 8px;">🖼️</div><div style="font-weight: 600;">Preview unavailable</div></div>';
+          };
+          
+          previewContent.appendChild(img);
+        } else if (file.type === 'application/pdf') {
+          // PDF icon
+          const pdfIcon = document.createElement('div');
+          pdfIcon.className = 'preview-icon';
+          pdfIcon.innerHTML = '<div style="text-align: center; color: #667eea; padding: 16px; cursor: pointer;"><div style="font-size: 48px;">📄</div><div style="font-size: 12px; font-weight: 600; margin-top: 4px;">PDF Document</div></div>';
+          pdfIcon.onclick = () => openFileInNewTab(fileUrl, file.name);
+          previewContent.appendChild(pdfIcon);
+        } else if (file.type.includes('word') || file.name.endsWith('.doc') || file.name.endsWith('.docx')) {
+          // Word icon
+          const wordIcon = document.createElement('div');
+          wordIcon.className = 'preview-icon';
+          wordIcon.innerHTML = '<div style="text-align: center; color: #2b5797; padding: 16px; cursor: pointer;"><div style="font-size: 48px;">📘</div><div style="font-size: 12px; font-weight: 600; margin-top: 4px;">Word Document</div></div>';
+          wordIcon.onclick = () => downloadFile(fileUrl, file.name);
+          previewContent.appendChild(wordIcon);
+        } else if (file.type.includes('sheet') || file.type.includes('excel') || file.name.endsWith('.xls') || file.name.endsWith('.xlsx')) {
+          // Excel icon
+          const excelIcon = document.createElement('div');
+          excelIcon.className = 'preview-icon';
+          excelIcon.innerHTML = '<div style="text-align: center; color: #1d6f42; padding: 16px; cursor: pointer;"><div style="font-size: 48px;">📊</div><div style="font-size: 12px; font-weight: 600; margin-top: 4px;">Excel Spreadsheet</div></div>';
+          excelIcon.onclick = () => downloadFile(fileUrl, file.name);
+          previewContent.appendChild(excelIcon);
+        } else if (file.type.includes('powerpoint') || file.name.endsWith('.ppt') || file.name.endsWith('.pptx')) {
+          // PowerPoint icon
+          const pptIcon = document.createElement('div');
+          pptIcon.className = 'preview-icon';
+          pptIcon.innerHTML = '<div style="text-align: center; color: #d24726; padding: 16px; cursor: pointer;"><div style="font-size: 48px;">📊</div><div style="font-size: 12px; font-weight: 600; margin-top: 4px;">PowerPoint</div></div>';
+          pptIcon.onclick = () => downloadFile(fileUrl, file.name);
+          previewContent.appendChild(pptIcon);
+        } else if (file.type.startsWith('text/') || file.name.endsWith('.txt')) {
+          // Text file icon
+          const txtIcon = document.createElement('div');
+          txtIcon.className = 'preview-icon';
+          txtIcon.innerHTML = '<div style="text-align: center; color: #4a5568; padding: 16px; cursor: pointer;"><div style="font-size: 48px;">📝</div><div style="font-size: 12px; font-weight: 600; margin-top: 4px;">Text File</div></div>';
+          txtIcon.onclick = () => openFileInNewTab(fileUrl, file.name);
+          previewContent.appendChild(txtIcon);
+        } else {
+          // Generic file icon
+          const genericIcon = document.createElement('div');
+          genericIcon.className = 'preview-icon';
+          genericIcon.innerHTML = '<div style="text-align: center; color: #718096; padding: 16px; cursor: pointer;"><div style="font-size: 48px;">📎</div><div style="font-size: 12px; font-weight: 600; margin-top: 4px;">File Attached</div><div style="font-size: 10px; margin-top: 4px; color: #a0aec0;">Click View to download</div></div>';
+          genericIcon.onclick = () => downloadFile(fileUrl, file.name);
+          previewContent.appendChild(genericIcon);
+        }
+        
+        // Setup View button
+        viewBtn.onclick = () => {
+          if (file.type.startsWith('image/') || file.type === 'application/pdf' || file.type.startsWith('text/')) {
+            openFileInNewTab(fileUrl, file.name);
+          } else {
+            downloadFile(fileUrl, file.name);
+          }
+        };
+        
+        showToast('📎', 'Attached!', `${file.name} attached successfully`);
+      }
+    }
+    
+    // Open file in new tab
+    function openFileInNewTab(url, fileName) {
+      const newWindow = window.open(url, '_blank');
+      if (!newWindow) {
+        showToast('⚠️', 'Blocked', 'Popup blocked. Please allow popups to view files.');
+      } else {
+        showToast('👁️', 'Opening...', `Opening ${fileName} in new tab`);
+      }
+    }
+    
+    // Download file
+    function downloadFile(url, fileName) {
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = fileName;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      showToast('⬇️', 'Downloading...', `${fileName} download started`);
+    }
+    
+    // Remove Attachment
+    function removeAttachment(button) {
+      const stepItem = button.closest('.step-item');
+      const previewContainer = stepItem.querySelector('.attachment-preview');
+      const fileInput = stepItem.querySelector('.step-attachment');
+      const attachLabel = stepItem.querySelector('.attach-label');
+      
+      // Revoke object URL to free memory
+      if (fileInput.dataset.fileUrl) {
+        URL.revokeObjectURL(fileInput.dataset.fileUrl);
+      }
+      
+      // Clear file input and data attributes
+      fileInput.value = '';
+      delete fileInput.dataset.fileUrl;
+      delete fileInput.dataset.fileName;
+      delete fileInput.dataset.fileType;
+      
+      // Reset UI
+      previewContainer.style.display = 'none';
+      attachLabel.textContent = 'Attach';
+      
+      showToast('🗑️', 'Removed!', 'Attachment removed from step');
+    }
+
+    // Switch Steps Mode
+    function switchStepsMode(mode) {
+      const visualEditor = document.getElementById('visualEditor');
+      const rawEditorContainer = document.getElementById('rawEditorContainer');
+      const tabs = document.querySelectorAll('.steps-mode-tab');
+      
+      tabs.forEach(tab => tab.classList.remove('active'));
+      
+      if (mode === 'visual') {
+        visualEditor.style.display = 'block';
+        rawEditorContainer.style.display = 'none';
+        tabs[0].classList.add('active');
+      } else {
+        visualEditor.style.display = 'none';
+        rawEditorContainer.style.display = 'block';
+        tabs[1].classList.add('active');
+        syncToRawMode();
+      }
+    }
+
+    // Add Test Step - Enhanced with full formatting toolbar
+    function addTestStep(action = '', expected = '', data = '', silent = false) {
+      stepCounter++;
+      const stepsGrid = document.getElementById('stepsGrid');
+      
+      const emptyState = stepsGrid.querySelector('.empty-state');
+      if (emptyState) {
+        emptyState.remove();
+      }
+      
+      const stepId = `step-${Date.now()}-${stepCounter}`;
+      const commonEmojis = ['😊', '👍', '✅', '❌', '⚠️', '📝', '🔍', '💡', '🎯', '🚀', '⭐', '💻', '📱', '🔐', '🌟', '✨', '🎨', '📊', '⚡', '🔧'];
+      
+      const stepHtml = `
+        <div class="step-item" draggable="true" id="${stepId}">
+          <div class="step-header">
+            <div class="step-header-left">
+              <span class="drag-handle">⋮⋮</span>
+              <span class="step-number">Step ${stepCounter}</span>
+            </div>
+            <div class="step-actions">
+              <button type="button" class="btn-step-action" onclick="moveStepUp(this)" title="Move Up">⬆️</button>
+              <button type="button" class="btn-step-action" onclick="moveStepDown(this)" title="Move Down">⬇️</button>
+              <button type="button" class="btn-step-action" onclick="duplicateStep(this)" title="Duplicate">📋</button>
+              <button type="button" class="btn-step-action" onclick="removeTestStep(this)" title="Delete">🗑️</button>
+            </div>
+          </div>
+          <div class="step-fields">
+            <div class="step-field-wrapper">
+              <label class="step-field-label">Action</label>
+              <div class="formatting-toolbar" id="toolbar-action-${stepId}">
+                <button type="button" class="format-btn" onclick="formatText('bold')" title="Bold"><strong>B</strong></button>
+                <button type="button" class="format-btn" onclick="formatText('italic')" title="Italic"><em>I</em></button>
+                <button type="button" class="format-btn" onclick="formatText('underline')" title="Underline"><u>U</u></button>
+                <span class="toolbar-separator"></span>
+                <button type="button" class="format-btn" onclick="formatText('left')" title="Align Left">⬅️</button>
+                <button type="button" class="format-btn" onclick="formatText('center')" title="Align Center">↔️</button>
+                <button type="button" class="format-btn" onclick="formatText('right')" title="Align Right">➡️</button>
+                <span class="toolbar-separator"></span>
+                <div class="color-picker-wrapper">
+                  <button type="button" class="format-btn" onclick="toggleDropdown('color-text-${stepId}')" title="Text Color">🎨 A</button>
+                  <div id="color-text-${stepId}" class="color-picker-dropdown">
+                    <div class="color-option" style="background: #000000;" onclick="applyColor('#000000', false)"></div>
+                    <div class="color-option" style="background: #fc8181;" onclick="applyColor('#fc8181', false)"></div>
+                    <div class="color-option" style="background: #48bb78;" onclick="applyColor('#48bb78', false)"></div>
+                    <div class="color-option" style="background: #4299e1;" onclick="applyColor('#4299e1', false)"></div>
+                    <div class="color-option" style="background: #ed8936;" onclick="applyColor('#ed8936', false)"></div>
+                    <div class="color-option" style="background: #9f7aea;" onclick="applyColor('#9f7aea', false)"></div>
+                    <div class="color-option" style="background: #667eea;" onclick="applyColor('#667eea', false)"></div>
+                    <div class="color-option" style="background: #ed64a6;" onclick="applyColor('#ed64a6', false)"></div>
+                  </div>
+                </div>
+                <div class="color-picker-wrapper">
+                  <button type="button" class="format-btn" onclick="toggleDropdown('color-bg-${stepId}')" title="Background Color">🖍️</button>
+                  <div id="color-bg-${stepId}" class="color-picker-dropdown">
+                    <div class="color-option" style="background: #fff5f5;" onclick="applyColor('#fff5f5', true)"></div>
+                    <div class="color-option" style="background: #fef3c7;" onclick="applyColor('#fef3c7', true)"></div>
+                    <div class="color-option" style="background: #c6f6d5;" onclick="applyColor('#c6f6d5', true)"></div>
+                    <div class="color-option" style="background: #bee3f8;" onclick="applyColor('#bee3f8', true)"></div>
+                    <div class="color-option" style="background: #e9d8fd;" onclick="applyColor('#e9d8fd', true)"></div>
+                    <div class="color-option" style="background: #fed7e2;" onclick="applyColor('#fed7e2', true)"></div>
+                    <div class="color-option" style="background: #feebc8;" onclick="applyColor('#feebc8', true)"></div>
+                    <div class="color-option" style="background: #e2e8f0;" onclick="applyColor('#e2e8f0', true)"></div>
+                  </div>
+                </div>
+                <span class="toolbar-separator"></span>
+                <div class="emoji-picker-wrapper">
+                  <button type="button" class="format-btn" onclick="toggleDropdown('emoji-${stepId}')" title="Insert Emoji">😊</button>
+                  <div id="emoji-${stepId}" class="emoji-picker-dropdown">
+                    ${commonEmojis.map(emoji => `<span class="emoji-option" onclick="insertEmoji('${emoji}')">${emoji}</span>`).join('')}
+                  </div>
+                </div>
+                <span class="toolbar-separator"></span>
+                <button type="button" class="format-btn" onclick="formatText('list')" title="Bullet List">���</button>
+                <button type="button" class="format-btn" onclick="formatText('numlist')" title="Numbered List">1.</button>
+                <span class="toolbar-separator"></span>
+                <div class="size-picker-wrapper">
+                  <button type="button" class="format-btn" onclick="toggleDropdown('size-${stepId}')" title="Font Size">Aa</button>
+                  <div id="size-${stepId}" class="size-picker-dropdown">
+                    <button type="button" class="size-option" onclick="applyFontSize('11px')">Small</button>
+                    <button type="button" class="size-option" onclick="applyFontSize('13px')">Normal</button>
+                    <button type="button" class="size-option" onclick="applyFontSize('16px')">Medium</button>
+                    <button type="button" class="size-option" onclick="applyFontSize('20px')">Large</button>
+                    <button type="button" class="size-option" onclick="applyFontSize('24px')">X-Large</button>
+                  </div>
+                </div>
+                <button type="button" class="format-btn" onclick="formatText('code')" title="Code">&lt;&gt;</button>
+                <button type="button" class="format-btn" onclick="formatText('mention')" title="Mention">@</button>
+                <button type="button" class="format-btn" onclick="formatText('tag')" title="Tag">#</button>
+                <button type="button" class="format-btn" onclick="formatText('link')" title="Insert Link">🔗</button>
+              </div>
+              <textarea class="step-action" placeholder="Describe the action..." onfocus="showToolbar(this)">${action}</textarea>
+            </div>
+            <div class="step-field-wrapper">
+              <label class="step-field-label">Expected Result</label>
+              <div class="formatting-toolbar" id="toolbar-expected-${stepId}">
+                <button type="button" class="format-btn" onclick="formatText('bold')" title="Bold"><strong>B</strong></button>
+                <button type="button" class="format-btn" onclick="formatText('italic')" title="Italic"><em>I</em></button>
+                <button type="button" class="format-btn" onclick="formatText('underline')" title="Underline"><u>U</u></button>
+                <span class="toolbar-separator"></span>
+                <button type="button" class="format-btn" onclick="formatText('left')" title="Align Left">⬅️</button>
+                <button type="button" class="format-btn" onclick="formatText('center')" title="Align Center">↔️</button>
+                <button type="button" class="format-btn" onclick="formatText('right')" title="Align Right">➡️</button>
+                <span class="toolbar-separator"></span>
+                <div class="color-picker-wrapper">
+                  <button type="button" class="format-btn" onclick="toggleDropdown('color-text-exp-${stepId}')" title="Text Color">🎨 A</button>
+                  <div id="color-text-exp-${stepId}" class="color-picker-dropdown">
+                    <div class="color-option" style="background: #000000;" onclick="applyColor('#000000', false)"></div>
+                    <div class="color-option" style="background: #fc8181;" onclick="applyColor('#fc8181', false)"></div>
+                    <div class="color-option" style="background: #48bb78;" onclick="applyColor('#48bb78', false)"></div>
+                    <div class="color-option" style="background: #4299e1;" onclick="applyColor('#4299e1', false)"></div>
+                    <div class="color-option" style="background: #ed8936;" onclick="applyColor('#ed8936', false)"></div>
+                    <div class="color-option" style="background: #9f7aea;" onclick="applyColor('#9f7aea', false)"></div>
+                    <div class="color-option" style="background: #667eea;" onclick="applyColor('#667eea', false)"></div>
+                    <div class="color-option" style="background: #ed64a6;" onclick="applyColor('#ed64a6', false)"></div>
+                  </div>
+                </div>
+                <div class="color-picker-wrapper">
+                  <button type="button" class="format-btn" onclick="toggleDropdown('color-bg-exp-${stepId}')" title="Background Color">🖍️</button>
+                  <div id="color-bg-exp-${stepId}" class="color-picker-dropdown">
+                    <div class="color-option" style="background: #fff5f5;" onclick="applyColor('#fff5f5', true)"></div>
+                    <div class="color-option" style="background: #fef3c7;" onclick="applyColor('#fef3c7', true)"></div>
+                    <div class="color-option" style="background: #c6f6d5;" onclick="applyColor('#c6f6d5', true)"></div>
+                    <div class="color-option" style="background: #bee3f8;" onclick="applyColor('#bee3f8', true)"></div>
+                    <div class="color-option" style="background: #e9d8fd;" onclick="applyColor('#e9d8fd', true)"></div>
+                    <div class="color-option" style="background: #fed7e2;" onclick="applyColor('#fed7e2', true)"></div>
+                    <div class="color-option" style="background: #feebc8;" onclick="applyColor('#feebc8', true)"></div>
+                    <div class="color-option" style="background: #e2e8f0;" onclick="applyColor('#e2e8f0', true)"></div>
+                  </div>
+                </div>
+                <span class="toolbar-separator"></span>
+                <div class="emoji-picker-wrapper">
+                  <button type="button" class="format-btn" onclick="toggleDropdown('emoji-exp-${stepId}')" title="Insert Emoji">😊</button>
+                  <div id="emoji-exp-${stepId}" class="emoji-picker-dropdown">
+                    ${commonEmojis.map(emoji => `<span class="emoji-option" onclick="insertEmoji('${emoji}')">${emoji}</span>`).join('')}
+                  </div>
+                </div>
+                <span class="toolbar-separator"></span>
+                <button type="button" class="format-btn" onclick="formatText('list')" title="Bullet List">•</button>
+                <button type="button" class="format-btn" onclick="formatText('numlist')" title="Numbered List">1.</button>
+                <span class="toolbar-separator"></span>
+                <div class="size-picker-wrapper">
+                  <button type="button" class="format-btn" onclick="toggleDropdown('size-exp-${stepId}')" title="Font Size">Aa</button>
+                  <div id="size-exp-${stepId}" class="size-picker-dropdown">
+                    <button type="button" class="size-option" onclick="applyFontSize('11px')">Small</button>
+                    <button type="button" class="size-option" onclick="applyFontSize('13px')">Normal</button>
+                    <button type="button" class="size-option" onclick="applyFontSize('16px')">Medium</button>
+                    <button type="button" class="size-option" onclick="applyFontSize('20px')">Large</button>
+                    <button type="button" class="size-option" onclick="applyFontSize('24px')">X-Large</button>
+                  </div>
+                </div>
+                <button type="button" class="format-btn" onclick="formatText('code')" title="Code">&lt;&gt;</button>
+                <button type="button" class="format-btn" onclick="formatText('mention')" title="Mention">@</button>
+                <button type="button" class="format-btn" onclick="formatText('tag')" title="Tag">#</button>
+                <button type="button" class="format-btn" onclick="formatText('link')" title="Insert Link">🔗</button>
+              </div>
+              <textarea class="step-expected" placeholder="Expected result..." onfocus="showToolbar(this)">${expected}</textarea>
+            </div>
+            <div class="step-field-group">
+              <label class="step-field-label">Attachment</label>
+              <div style="display: flex; gap: 6px; flex-direction: column;">
+                <label class="btn-attachment" style="display: inline-flex; align-items: center; gap: 6px; padding: 8px 12px; background: white; border: 2px solid #667eea; border-radius: 6px; cursor: pointer; font-size: 12px; font-weight: 600; color: #667eea; transition: all 0.2s; justify-content: center;" onmouseover="this.style.background='#667eea'; this.style.color='white'" onmouseout="this.style.background='white'; this.style.color='#667eea'">
+                  <span>📎</span>
+                  <span class="attach-label">Attach</span>
+                  <input type="file" class="step-attachment" accept="image/*,.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.zip,.rar" onchange="handleAttachment(this)" style="display: none;">
+                </label>
+                <div class="attachment-preview" style="display: none;">
+                  <div class="preview-content"></div>
+                  <div class="attachment-info" style="margin-bottom: 6px; font-size: 11px; color: #718096; display: flex; align-items: center; justify-content: space-between;">
+                    <span class="file-name" style="flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;"></span>
+                  </div>
+                  <div style="display: flex; gap: 4px;">
+                    <button type="button" class="btn-view-full" style="flex: 1; padding: 6px; background: #667eea; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 11px; font-weight: 600; transition: all 0.2s;" onmouseover="this.style.background='#5568d3'" onmouseout="this.style.background='#667eea'">
+                      👁️ View
+                    </button>
+                    <button type="button" class="btn-remove-attachment" onclick="removeAttachment(this)" style="flex: 1; padding: 6px; background: #fc8181; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 11px; font-weight: 600; transition: all 0.2s;" onmouseover="this.style.background='#f56565'" onmouseout="this.style.background='#fc8181'">
+                      🗑️ Remove
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+      
+      stepsGrid.insertAdjacentHTML('beforeend', stepHtml);
+      
+      const stepElement = document.getElementById(stepId);
+      stepElement.addEventListener('dragstart', handleDragStart);
+      stepElement.addEventListener('dragover', handleDragOver);
+      stepElement.addEventListener('drop', handleDrop);
+      stepElement.addEventListener('dragend', handleDragEnd);
+      
+      if (!silent) {
+        showToast('✅', 'Step Added!', `Step ${stepCounter} added successfully`);
+        syncToRawMode();
+        
+        setTimeout(() => {
+          stepElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }, 100);
+      }
+    }
+
+    // Extract Test Case
+    function extractTestCase() {
+      const title = document.getElementById('testTitle').value || 'Untitled Test Case';
+      const description = document.getElementById('testDescription').value || 'No description';
+      const steps = document.querySelectorAll('.step-item');
+      
+      if (steps.length === 0) {
+        showToast('⚠️', 'No Steps', 'Please add test steps before extracting');
+        return;
+      }
+      
+      let stepsText = '';
+      steps.forEach((step, idx) => {
+        const action = step.querySelector('.step-action').value || '[No action specified]';
+        const expected = step.querySelector('.step-expected').value || '[No expected result]';
+        stepsText += `Step ${idx + 1}: ${action}\n  Expected: ${expected}\n\n`;
+      });
+      
+      showToast('✅', 'Extracted!', 'Test case sections extracted successfully');
+    }
+
+    // Drag and Drop Handlers
+    function handleDragStart(e) {
+      draggedStep = this;
+      this.classList.add('dragging');
+      e.dataTransfer.effectAllowed = 'move';
+    }
+
+    function handleDragOver(e) {
+      if (e.preventDefault) {
+        e.preventDefault();
+      }
+      e.dataTransfer.dropEffect = 'move';
+      return false;
+    }
+
+    function handleDrop(e) {
+      if (e.stopPropagation) {
+        e.stopPropagation();
+      }
+
+      if (draggedStep !== this) {
+        const allSteps = Array.from(document.querySelectorAll('.step-item'));
+        const draggedIndex = allSteps.indexOf(draggedStep);
+        const targetIndex = allSteps.indexOf(this);
+
+        if (draggedIndex < targetIndex) {
+          this.parentNode.insertBefore(draggedStep, this.nextSibling);
+        } else {
+          this.parentNode.insertBefore(draggedStep, this);
+        }
+
+        updateStepNumbers();
+      }
+
+      return false;
+    }
+
+    function handleDragEnd(e) {
+      this.classList.remove('dragging');
+    }
+
+    // Move Step Up
+    function moveStepUp(button) {
+      const stepItem = button.closest('.step-item');
+      const prevStep = stepItem.previousElementSibling;
+      if (prevStep && !prevStep.classList.contains('empty-state')) {
+        stepItem.parentNode.insertBefore(stepItem, prevStep);
+        updateStepNumbers();
+        showToast('✅', 'Moved!', 'Step moved up');
+      }
+    }
+
+    // Move Step Down
+    function moveStepDown(button) {
+      const stepItem = button.closest('.step-item');
+      const nextStep = stepItem.nextElementSibling;
+      if (nextStep) {
+        stepItem.parentNode.insertBefore(nextStep, stepItem);
+        updateStepNumbers();
+        showToast('✅', 'Moved!', 'Step moved down');
+      }
+    }
+
+    // Duplicate Step
+    function duplicateStep(button) {
+      const stepItem = button.closest('.step-item');
+      const action = stepItem.querySelector('.step-action').value;
+      const expected = stepItem.querySelector('.step-expected').value;
+
+      addTestStep(action, expected, '', false);
+      showToast('📋', 'Duplicated!', 'Step duplicated successfully');
+    }
+
+    // Update Step Numbers
+    function updateStepNumbers() {
+      const steps = document.querySelectorAll('.step-item');
+      steps.forEach((step, idx) => {
+        step.querySelector('.step-number').textContent = `Step ${idx + 1}`;
+      });
+      stepCounter = steps.length;
+      syncToRawMode();
+    }
+
+    // Remove Test Step
+    function removeTestStep(button) {
+      const stepItem = button.closest('.step-item');
+      stepItem.remove();
+      
+      updateStepNumbers();
+
+      if (stepCounter === 0) {
+        const stepsGrid = document.getElementById('stepsGrid');
+        stepsGrid.innerHTML = `
+          <div class="empty-state">
+            <div class="empty-state-icon">📝</div>
+            <div class="empty-state-title">No steps added yet</div>
+            <div class="empty-state-text">Click "Add Step" to create your first step</div>
+          </div>
+        `;
+      }
+
+      showToast('🗑️', 'Deleted!', 'Step removed successfully');
+    }
+
+    // Parse Raw Steps
+    function parseRawSteps() {
+      const rawText = document.getElementById('rawEditor').value;
+      if (!rawText.trim()) {
+        showToast('⚠️', 'Empty Content', 'Please paste test steps in the raw editor');
+        return;
+      }
+
+      stepCounter = 0;
+      document.getElementById('stepsGrid').innerHTML = '';
+
+      const lines = rawText.split('\n');
+      let titleLine = '';
+      let descLine = '';
+      let stepsStartIndex = 0;
+
+      for (let i = 0; i < lines.length; i++) {
+        const line = lines[i].trim();
+        if (line.toUpperCase().startsWith('TITLE')) {
+          titleLine = line.replace(/^TITLE\s*/i, '').trim();
+        } else if (line.toUpperCase().startsWith('DESCRIPTION')) {
+          descLine = line.replace(/^DESCRIPTION\s*/i, '').trim();
+        } else if (/^Step/i.test(line)) {
+          stepsStartIndex = i;
+          break;
+        }
+      }
+
+      if (titleLine) {
+        document.getElementById('testTitle').value = titleLine;
+      }
+      if (descLine) {
+        document.getElementById('testDescription').value = descLine;
+      }
+
+      let currentStep = null;
+      let parsedCount = 0;
+      let currentField = null;
+
+      for (let i = stepsStartIndex; i < lines.length; i++) {
+        const line = lines[i];
+        const trimmedLine = line.trim();
+        
+        if (/^Step(\s+\d+)?:?\s*$/i.test(trimmedLine)) {
+          if (currentStep) {
+            addTestStep(currentStep.action, currentStep.expected, currentStep.data, true);
+            parsedCount++;
+          }
+          currentStep = { action: '', expected: '', data: '' };
+          currentField = null;
+        } else if (currentStep !== null) {
+          if (/^\s*Action:/i.test(line)) {
+            currentField = 'action';
+            const value = line.replace(/^\s*Action:\s*/i, '').trim();
+            currentStep.action = value;
+          } else if (/^\s*Expected:/i.test(line)) {
+            currentField = 'expected';
+            const value = line.replace(/^\s*Expected:\s*/i, '').trim();
+            currentStep.expected = value;
+          } else if (/^\s*Data:/i.test(line)) {
+            currentField = 'data';
+            const value = line.replace(/^\s*Data:\s*/i, '').trim();
+            currentStep.data = value;
+          } else if (trimmedLine && currentField) {
+            const currentValue = currentStep[currentField];
+            currentStep[currentField] = currentValue ? currentValue + ' ' + trimmedLine : trimmedLine;
+          }
+        }
+      }
+
+      if (currentStep !== null) {
+        addTestStep(currentStep.action, currentStep.expected, currentStep.data, true);
+        parsedCount++;
+      }
+
+      if (parsedCount > 0) {
+        syncToRawMode();
+        document.querySelectorAll('.steps-mode-tab')[0].click();
+        showToast('✅', 'Imported!', `${parsedCount} steps imported successfully`);
+      } else {
+        showToast('⚠️', 'No Steps Found', 'No steps found. Use format: Step 1:, Action:, Expected:');
+      }
+    }
+
+    // Export to Raw
+    function exportToRaw() {
+      syncToRawMode();
+      showToast('📤', 'Synced!', 'Visual editor synced to raw mode');
+    }
+
+    // Handle Save Test Case
+    function handleSaveTestCase(event) {
+      event.preventDefault();
+      
+      const title = document.getElementById('testTitle').value;
+      const steps = document.querySelectorAll('.step-item');
+      
+      showToast('✅', 'Test Case Saved!', `"${title}" created successfully`);
+      
+      event.target.reset();
+      initializeDefaultSteps();
+    }
+
+    // Handle Cancel
+    function handleCancel() {
+      if (stepCounter > 0) {
+        const confirmMsg = 'Are you sure you want to cancel? All unsaved changes will be lost.';
+        const confirmDiv = document.createElement('div');
+        confirmDiv.style.cssText = 'position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; padding: 32px; border-radius: 12px; box-shadow: 0 20px 60px rgba(0,0,0,0.3); z-index: 9999; text-align: center;';
+        confirmDiv.innerHTML = `
+          <div style="font-size: 48px; margin-bottom: 16px;">⚠️</div>
+          <div style="font-size: 18px; font-weight: 700; margin-bottom: 12px; color: #2d3748;">Confirm Cancel</div>
+          <div style="font-size: 14px; color: #718096; margin-bottom: 24px;">${confirmMsg}</div>
+          <div style="display: flex; gap: 12px; justify-content: center;">
+            <button onclick="this.parentElement.parentElement.remove()" style="padding: 10px 24px; background: white; border: 2px solid #e2e8f0; border-radius: 8px; cursor: pointer; font-weight: 600;">No, Continue Editing</button>
+            <button onclick="document.getElementById('testCaseForm').reset(); initializeDefaultSteps(); this.parentElement.parentElement.remove(); showToast('🗑️', 'Cancelled', 'Changes discarded');" style="padding: 10px 24px; background: #fc8181; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600;">Yes, Discard Changes</button>
+          </div>
+        `;
+        document.body.appendChild(confirmDiv);
+      }
+    }
+
+    // Show Toast
+    function showToast(icon, title, message) {
+      const toast = document.getElementById('toast');
+      document.getElementById('toastIcon').textContent = icon;
+      document.getElementById('toastTitle').textContent = title;
+      document.getElementById('toastMessage').textContent = message;
+      
+      toast.classList.add('active');
+      
+      setTimeout(() => {
+        toast.classList.remove('active');
+      }, 3000);
+    }
+
+    // Initialize Default Steps
+    function initializeDefaultSteps() {
+      stepCounter = 0;
+      const stepsGrid = document.getElementById('stepsGrid');
+      stepsGrid.innerHTML = `
+        <div class="empty-state">
+          <div class="empty-state-icon">📝</div>
+          <div class="empty-state-title">No steps added yet</div>
+          <div class="empty-state-text">Click "Add Step" to create your first step</div>
+        </div>
+      `;
+      
+      syncToRawMode();
+    }
+
+    // Sync Visual Mode to Raw Mode
+    function syncToRawMode() {
+      const titleValue = document.getElementById('testTitle').value || 'New Test Case';
+      const descValue = document.getElementById('testDescription').value || 'Test case description';
+      
+      let rawText = `TITLE ${titleValue}\nDESCRIPTION ${descValue}\n\n`;
+      
+      const steps = document.querySelectorAll('.step-item');
+      steps.forEach((step, idx) => {
+        const action = step.querySelector('.step-action').value;
+        const expected = step.querySelector('.step-expected').value;
+        
+        rawText += `Step ${idx + 1}:\n`;
+        rawText += `  Action: ${action}\n`;
+        rawText += `  Expected: ${expected}\n\n`;
+      });
+      
+      document.getElementById('rawEditor').value = rawText;
+    }
+
+    // Auto-sync to raw mode on input
+    document.addEventListener('input', function(e) {
+      if (e.target.classList.contains('step-action') || 
+          e.target.classList.contains('step-expected') ||
+          e.target.id === 'testTitle' ||
+          e.target.id === 'testDescription') {
+        syncToRawMode();
+      }
+    });
+
+    // Form submit handler
+    document.getElementById('testCaseForm').addEventListener('submit', handleSaveTestCase);
+
+    // Check if already logged in
+    window.addEventListener('DOMContentLoaded', () => {
+      const savedProject = localStorage.getItem('projectName');
+      if (savedProject) {
+        projectName = savedProject;
+        document.getElementById('sidebarProject').textContent = projectName;
+        document.getElementById('loginScreen').style.display = 'none';
+        document.getElementById('appLayout').classList.add('active');
+      }
+      
+      const darkMode = localStorage.getItem('darkMode');
+      if (darkMode === 'enabled') {
+        document.body.classList.add('dark-mode');
+        const toggle = document.querySelector('.toggle-switch');
+        if (toggle) {
+          toggle.classList.add('active');
+        }
+      }
+      
+      const sidebarCollapsed = localStorage.getItem('sidebarCollapsed');
+      if (sidebarCollapsed === 'true') {
+        document.getElementById('sidebar').classList.add('collapsed');
+      }
+      
+      initializeDefaultSteps();
+    });
+
+    function openTemplatesModal() {
+      const templates = [
+        { id: 'tc1.1', name: 'TC 1.1 – Login with User Credentials', steps: 10 },
+        { id: 'tc1.2', name: 'TC 1.2 – Login with Invalid Credentials', steps: 10 },
+        { id: 'tc2.1', name: 'TC 2.1 – Create New PL Account', steps: 10 },
+        { id: 'tc3.1', name: 'TC 3.1 – Complete Asset Details', steps: 10 },
+        { id: 'tc3.2', name: 'TC 3.2 – Complete Requester Details', steps: 10 },
+        { id: 'tc4.1', name: 'TC 4.1 – Upload Supporting Documents', steps: 10 },
+        { id: 'tc5.1', name: 'TC 5.1 – Review and Submit Form', steps: 10 },
+        { id: 'tc5.2', name: 'TC 5.2 – Edit Submitted Form', steps: 10 },
+        { id: 'tc6.1', name: 'TC 6.1 – Verify Email Notification', steps: 10 },
+        { id: 'tc6.2', name: 'TC 6.2 – Check Submission Status', steps: 10 }
+      ];
+      
+      const modalHtml = `
+        <div id="templatesModal" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 9999; display: flex; align-items: center; justify-content: center;">
+          <div style="background: white; border-radius: 16px; padding: 32px; max-width: 600px; width: 90%; max-height: 80vh; overflow-y: auto; box-shadow: 0 20px 60px rgba(0,0,0,0.3);">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+              <h2 style="font-size: 24px; font-weight: 700; color: #2d3748;">📄 Select Template</h2>
+              <button onclick="document.getElementById('templatesModal').remove()" style="padding: 8px 12px; background: transparent; border: none; font-size: 24px; cursor: pointer; color: #718096;">×</button>
+            </div>
+            <div style="display: flex; flex-direction: column; gap: 12px;">
+              ${templates.map(t => `
+                <button onclick="loadTemplate('${t.id}')" style="padding: 16px; background: white; border: 2px solid #e2e8f0; border-radius: 8px; cursor: pointer; text-align: left; transition: all 0.2s; font-size: 14px; font-weight: 600; color: #2d3748;" onmouseover="this.style.borderColor='#667eea'; this.style.background='#f7fafc'" onmouseout="this.style.borderColor='#e2e8f0'; this.style.background='white'">
+                  <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <span>${t.name}</span>
+                    <span style="background: #667eea; color: white; padding: 4px 8px; border-radius: 4px; font-size: 12px;">${t.steps} steps</span>
+                  </div>
+                </button>
+              `).join('')}
+            </div>
+          </div>
+        </div>
+      `;
+      
+      document.body.insertAdjacentHTML('beforeend', modalHtml);
+    }
+    
+    function loadTemplate(templateId) {
+      document.getElementById('templatesModal').remove();
+      
+      const templates = {
+        'tc1.1': {
+          title: 'TC 1.1 – Login with User Credentials',
+          description: 'Verify that users can successfully log in with valid credentials',
+          steps: [
+            { action: 'Navigate to the login page', expected: 'Login page loads successfully with username and password fields visible' },
+            { action: 'Enter valid username in the username field', expected: 'Username is accepted and displayed in the field' },
+            { action: 'Enter valid password in the password field', expected: 'Password is masked and accepted' },
+            { action: 'Click the "Login" button', expected: 'System processes the login request' },
+            { action: 'Wait for authentication', expected: 'User is authenticated successfully' },
+            { action: 'Verify redirect to dashboard', expected: 'User is redirected to the main dashboard page' },
+            { action: 'Check user name display', expected: 'User\'s name is displayed in the header' },
+            { action: 'Verify menu access', expected: 'All authorized menu items are accessible' },
+            { action: 'Check session token', expected: 'Valid session token is created and stored' },
+            { action: 'Verify logout option is available', expected: 'Logout button is visible and functional' }
+          ]
+        },
+        'tc1.2': {
+          title: 'TC 1.2 – Login with Invalid Credentials',
+          description: 'Verify that the system properly handles invalid login attempts',
+          steps: [
+            { action: 'Navigate to the login page', expected: 'Login page loads successfully' },
+            { action: 'Enter invalid username', expected: 'Username field accepts the input' },
+            { action: 'Enter invalid password', expected: 'Password field accepts the input' },
+            { action: 'Click the "Login" button', expected: 'System attempts to authenticate' },
+            { action: 'Wait for error message', expected: 'Error message "Invalid credentials" is displayed' },
+            { action: 'Verify fields are cleared', expected: 'Password field is cleared for security' },
+            { action: 'Attempt login again with wrong password', expected: 'Error message appears again' },
+            { action: 'Check account lockout after 3 attempts', expected: 'Account is locked after 3 failed attempts' },
+            { action: 'Verify lockout message', expected: 'Message displays account lockout duration' },
+            { action: 'Confirm no unauthorized access', expected: 'User remains on login page without access' }
+          ]
+        },
+        'tc2.1': {
+          title: 'TC 2.1 – Create New PL Account',
+          description: 'Verify the complete process of creating a new PL account',
+          steps: [
+            { action: 'Navigate to account creation page', expected: 'Account creation form is displayed' },
+            { action: 'Fill in account holder name', expected: 'Name field accepts alphabetic characters' },
+            { action: 'Enter valid email address', expected: 'Email format is validated and accepted' },
+            { action: 'Select account type from dropdown', expected: 'Account types are listed correctly' },
+            { action: 'Enter phone number', expected: 'Phone number format is validated' },
+            { action: 'Set account password with requirements', expected: 'Password strength indicator shows strong password' },
+            { action: 'Confirm password in second field', expected: 'Passwords match validation passes' },
+            { action: 'Accept terms and conditions', expected: 'Checkbox is selected' },
+            { action: 'Click "Create Account" button', expected: 'Account creation process initiates' },
+            { action: 'Verify confirmation message', expected: 'Success message displays with account number' }
+          ]
+        },
+        'tc3.1': {
+          title: 'TC 3.1 – Complete Asset Details',
+          description: 'Verify that asset details can be entered and saved correctly',
+          steps: [
+            { action: 'Navigate to asset details form', expected: 'Asset form loads with all required fields' },
+            { action: 'Enter asset name/description', expected: 'Text is accepted in the field' },
+            { action: 'Select asset category', expected: 'Categories dropdown displays available options' },
+            { action: 'Enter asset value', expected: 'Numeric value is accepted and formatted as currency' },
+            { action: 'Upload asset documentation', expected: 'File upload succeeds and shows file name' },
+            { action: 'Enter purchase date', expected: 'Date picker displays and date is selected' },
+            { action: 'Add asset location', expected: 'Location field accepts address details' },
+            { action: 'Enter serial number', expected: 'Serial number is validated and accepted' },
+            { action: 'Click "Save Asset" button', expected: 'Asset details are saved successfully' },
+            { action: 'Verify asset appears in list', expected: 'New asset is visible in assets table' }
+          ]
+        },
+        'tc3.2': {
+          title: 'TC 3.2 – Complete Requester Details',
+          description: 'Verify requester information can be entered and validated',
+          steps: [
+            { action: 'Open requester details section', expected: 'Requester form displays all fields' },
+            { action: 'Enter requester full name', expected: 'Name field accepts input' },
+            { action: 'Enter requester email', expected: 'Email validation passes for valid format' },
+            { action: 'Enter requester phone number', expected: 'Phone format is validated' },
+            { action: 'Select requester department', expected: 'Department dropdown shows all options' },
+            { action: 'Enter employee ID', expected: 'ID field accepts alphanumeric input' },
+            { action: 'Add requester notes', expected: 'Notes field accepts long text input' },
+            { action: 'Select priority level', expected: 'Priority options are displayed' },
+            { action: 'Click "Save Requester Info"', expected: 'Information is saved successfully' },
+            { action: 'Verify requester summary', expected: 'All entered information displays correctly in summary' }
+          ]
+        },
+        'tc4.1': {
+          title: 'TC 4.1 – Upload Supporting Documents',
+          description: 'Verify document upload functionality works correctly',
+          steps: [
+            { action: 'Navigate to documents upload section', expected: 'Upload area is visible with instructions' },
+            { action: 'Click "Choose File" button', expected: 'File browser dialog opens' },
+            { action: 'Select a PDF document', expected: 'File name appears in upload field' },
+            { action: 'Click "Upload" button', expected: 'Upload progress indicator displays' },
+            { action: 'Wait for upload completion', expected: 'Success message shows file uploaded' },
+            { action: 'Verify file appears in documents list', expected: 'Uploaded file is listed with correct name' },
+            { action: 'Upload an image file (JPG)', expected: 'Image upload succeeds' },
+            { action: 'Try uploading invalid file type', expected: 'Error message displays for unsupported file type' },
+            { action: 'Delete an uploaded document', expected: 'Document is removed from the list' },
+            { action: 'Verify final document count', expected: 'Document counter shows correct number of files' }
+          ]
+        },
+        'tc5.1': {
+          title: 'TC 5.1 – Review and Submit Form',
+          description: 'Verify the review and submission process works correctly',
+          steps: [
+            { action: 'Navigate to review page', expected: 'All entered information is displayed for review' },
+            { action: 'Verify asset details section', expected: 'Asset information matches entered data' },
+            { action: 'Verify requester details section', expected: 'Requester information is correct' },
+            { action: 'Check uploaded documents section', expected: 'All uploaded files are listed' },
+            { action: 'Click "Edit" on any section', expected: 'System navigates back to edit mode' },
+            { action: 'Return to review page', expected: 'Changes are reflected in review' },
+            { action: 'Check terms and conditions checkbox', expected: 'Checkbox is marked as checked' },
+            { action: 'Click "Submit" button', expected: 'Confirmation dialog appears' },
+            { action: 'Confirm submission', expected: 'Form is submitted successfully' },
+            { action: 'Verify confirmation number', expected: 'Unique confirmation number is displayed' }
+          ]
+        },
+        'tc5.2': {
+          title: 'TC 5.2 – Edit Submitted Form',
+          description: 'Verify that submitted forms can be edited when allowed',
+          steps: [
+            { action: 'Navigate to submitted forms list', expected: 'List of submitted forms displays' },
+            { action: 'Select a form with "Draft" status', expected: 'Form details open' },
+            { action: 'Click "Edit" button', expected: 'Form opens in edit mode' },
+            { action: 'Modify asset value', expected: 'New value is accepted' },
+            { action: 'Change requester notes', expected: 'Notes field updates successfully' },
+            { action: 'Remove one uploaded document', expected: 'Document is removed' },
+            { action: 'Upload a new document', expected: 'New document is added' },
+            { action: 'Click "Save Changes"', expected: 'Changes are saved successfully' },
+            { action: 'Verify edit timestamp', expected: 'Last modified date is updated' },
+            { action: 'Check form status remains "Draft"', expected: 'Status has not changed to submitted' }
+          ]
+        },
+        'tc6.1': {
+          title: 'TC 6.1 – Verify Email Notification',
+          description: 'Verify that email notifications are sent correctly',
+          steps: [
+            { action: 'Submit a new form', expected: 'Form submission completes successfully' },
+            { action: 'Check email inbox', expected: 'Confirmation email is received within 2 minutes' },
+            { action: 'Open confirmation email', expected: 'Email displays with correct subject line' },
+            { action: 'Verify email sender address', expected: 'Sender is from the correct domain' },
+            { action: 'Check email contains form number', expected: 'Confirmation number matches submission' },
+            { action: 'Verify email has correct recipient', expected: 'Email is addressed to requester' },
+            { action: 'Click link in email', expected: 'Link opens form details page' },
+            { action: 'Check email formatting', expected: 'HTML email renders correctly' },
+            { action: 'Verify email includes all details', expected: 'Asset and requester info are included' },
+            { action: 'Check unsubscribe link', expected: 'Unsubscribe option is present' }
+          ]
+        },
+        'tc6.2': {
+          title: 'TC 6.2 – Check Submission Status',
+          description: 'Verify users can check the status of their submissions',
+          steps: [
+            { action: 'Navigate to "My Submissions" page', expected: 'List of submissions displays' },
+            { action: 'Locate submitted form', expected: 'Form appears in the list' },
+            { action: 'Check status badge', expected: 'Status shows as "Submitted" or "Processing"' },
+            { action: 'Click on form to view details', expected: 'Full form details page opens' },
+            { action: 'Verify submission timestamp', expected: 'Correct date and time are shown' },
+            { action: 'Check processing history', expected: 'Status history timeline is visible' },
+            { action: 'Verify assigned reviewer', expected: 'Reviewer name is displayed if assigned' },
+            { action: 'Check estimated completion date', expected: 'Expected completion date is shown' },
+            { action: 'Test filter by status', expected: 'List filters correctly by selected status' },
+            { action: 'Verify export option', expected: 'Form can be exported as PDF' }
+          ]
+        }
+      };
+      
+      const template = templates[templateId];
+      if (!template) return;
+      
+      document.getElementById('testTitle').value = template.title;
+      document.getElementById('testDescription').value = template.description;
+      
+      stepCounter = 0;
+      document.getElementById('stepsGrid').innerHTML = '';
+      
+      template.steps.forEach((step, idx) => {
+        addTestStep(step.action, step.expected, '', true);
+      });
+      
+      syncToRawMode();
+      
+      showToast('✅', 'Template Loaded!', `${template.title} loaded with ${template.steps.length} steps`);
+      
+      setTimeout(() => {
+        document.querySelector('.step-item').scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }, 100);
+    }
+
+    if (window.elementSdk) {
+      window.elementSdk.init({
+        defaultConfig,
+        onConfigChange: async (config) => {
+          document.querySelector('.sidebar-logo-text').textContent = config.app_title || defaultConfig.app_title;
+          document.querySelector('.login-title').textContent = config.app_title || defaultConfig.app_title;
+        },
+        mapToCapabilities: (config) => ({
+          recolorables: [],
+          borderables: [],
+          fontEditable: undefined,
+          fontSizeable: undefined
+        }),
+        mapToEditPanelValues: (config) => new Map([
+          ['app_title', config.app_title || defaultConfig.app_title]
+        ])
+      });
+    }
+  </script>
+ <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9b1706e303ca35c6',t:'MTc2NjMxNjQxMS4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>
