@@ -1,0 +1,398 @@
+/* Shared Parameters Manager Styles */
+
+.shared-parameters-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+  background: #f5f5f5;
+  border-radius: 8px;
+}
+
+.shared-parameters-container h1 {
+  color: #333;
+  margin-bottom: 10px;
+  font-size: 28px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.subtitle {
+  color: #666;
+  margin-bottom: 20px;
+  font-size: 14px;
+}
+
+/* Tabs */
+.tabs {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 20px;
+  border-bottom: 2px solid #ddd;
+}
+
+.tab-button {
+  padding: 12px 20px;
+  border: none;
+  background: white;
+  color: #666;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  border-bottom: 3px solid transparent;
+  transition: all 0.3s ease;
+}
+
+.tab-button:hover {
+  color: #0078d4;
+  background: #f0f0f0;
+}
+
+.tab-button.active {
+  color: #0078d4;
+  border-bottom-color: #0078d4;
+}
+
+/* Message Box */
+.message-box {
+  background: #e8f4f8;
+  border-left: 4px solid #0078d4;
+  padding: 15px;
+  margin-bottom: 20px;
+  border-radius: 4px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.message-box p {
+  color: #333;
+  margin: 0;
+  white-space: pre-wrap;
+  flex: 1;
+}
+
+.close-btn {
+  background: none;
+  border: none;
+  font-size: 20px;
+  cursor: pointer;
+  color: #999;
+  padding: 0;
+  margin-left: 10px;
+}
+
+/* Tab Content */
+.tab-content {
+  background: white;
+  padding: 30px;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.tab-content h2 {
+  color: #333;
+  margin-bottom: 20px;
+  font-size: 20px;
+}
+
+.tab-content h3 {
+  color: #555;
+  margin-top: 25px;
+  margin-bottom: 15px;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.tab-content h4 {
+  color: #666;
+  margin-top: 20px;
+  margin-bottom: 12px;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+/* Form Sections */
+.form-section {
+  margin-bottom: 30px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid #eee;
+}
+
+.form-section:last-child {
+  border-bottom: none;
+}
+
+.form-group {
+  margin-bottom: 15px;
+}
+
+.form-group label {
+  display: block;
+  font-weight: 500;
+  color: #333;
+  margin-bottom: 5px;
+  font-size: 14px;
+}
+
+.form-input,
+.form-textarea {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-family: inherit;
+  font-size: 14px;
+  transition: border-color 0.3s ease;
+}
+
+.form-input:focus,
+.form-textarea:focus {
+  outline: none;
+  border-color: #0078d4;
+  box-shadow: 0 0 0 3px rgba(0, 120, 212, 0.1);
+}
+
+.form-textarea {
+  resize: vertical;
+  min-height: 60px;
+}
+
+.form-group small {
+  display: block;
+  color: #999;
+  margin-top: 3px;
+  font-size: 12px;
+}
+
+.helper-text {
+  color: #666;
+  font-size: 13px;
+  margin-bottom: 15px;
+  padding: 10px;
+  background: #f9f9f9;
+  border-left: 3px solid #0078d4;
+  border-radius: 2px;
+}
+
+/* Columns List */
+.columns-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 15px;
+}
+
+.column-item {
+  display: flex;
+  gap: 5px;
+  align-items: center;
+  flex: 1;
+  min-width: 200px;
+}
+
+.column-item .form-input {
+  flex: 1;
+}
+
+/* Data Table */
+.data-table-container {
+  overflow-x: auto;
+  margin-bottom: 15px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: white;
+}
+
+.data-table th {
+  background: #f5f5f5;
+  padding: 12px;
+  text-align: left;
+  font-weight: 600;
+  color: #333;
+  border-bottom: 2px solid #ddd;
+  font-size: 13px;
+}
+
+.data-table td {
+  padding: 10px;
+  border-bottom: 1px solid #eee;
+}
+
+.data-table tbody tr:hover {
+  background: #fafafa;
+}
+
+.table-input {
+  width: 100%;
+  padding: 8px;
+  border: 1px solid #ddd;
+  border-radius: 3px;
+  font-size: 13px;
+}
+
+.table-input:focus {
+  outline: none;
+  border-color: #0078d4;
+}
+
+/* Steps List */
+.steps-list {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  margin-bottom: 15px;
+}
+
+.step-item {
+  display: flex;
+  gap: 15px;
+  padding: 15px;
+  background: #f9f9f9;
+  border: 1px solid #eee;
+  border-radius: 4px;
+  align-items: flex-start;
+}
+
+.step-number {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  background: #0078d4;
+  color: white;
+  border-radius: 50%;
+  font-weight: 600;
+  font-size: 16px;
+  flex-shrink: 0;
+}
+
+.step-inputs {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* Buttons */
+.btn-primary,
+.btn-secondary,
+.btn-remove {
+  padding: 10px 20px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  transition: all 0.3s ease;
+  display: inline-block;
+}
+
+.btn-primary {
+  background: #0078d4;
+  color: white;
+  width: 100%;
+  padding: 12px;
+  font-size: 15px;
+}
+
+.btn-primary:hover:not(:disabled) {
+  background: #005fa3;
+}
+
+.btn-primary:disabled {
+  background: #ccc;
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.btn-secondary {
+  background: white;
+  color: #0078d4;
+  border: 1px solid #0078d4;
+  padding: 10px 15px;
+}
+
+.btn-secondary:hover {
+  background: #f5f5f5;
+}
+
+.btn-remove {
+  background: #ff4444;
+  color: white;
+  padding: 6px 10px;
+  font-size: 12px;
+  width: auto;
+  flex-shrink: 0;
+}
+
+.btn-remove:hover {
+  background: #cc0000;
+}
+
+/* Preview Section */
+.preview-section {
+  background: #f0f7ff;
+  border: 1px solid #0078d4;
+  border-radius: 4px;
+  padding: 15px;
+  margin-top: 20px;
+}
+
+.preview-section h4 {
+  margin-top: 0;
+  color: #0078d4;
+}
+
+.preview-section p {
+  margin: 10px 0;
+  color: #333;
+  font-size: 13px;
+}
+
+.preview-section strong {
+  color: #0078d4;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .shared-parameters-container {
+    padding: 15px;
+  }
+
+  .tab-content {
+    padding: 20px;
+  }
+
+  .columns-list {
+    flex-direction: column;
+  }
+
+  .column-item {
+    min-width: 100%;
+  }
+
+  .step-item {
+    flex-direction: column;
+  }
+
+  .step-number {
+    width: 35px;
+    height: 35px;
+  }
+
+  .data-table-container {
+    font-size: 12px;
+  }
+
+  .data-table th,
+  .data-table td {
+    padding: 8px;
+  }
+}

@@ -1,0 +1,70 @@
+/* Styles for UserStoriesView */
+
+#myStoriesView .filter-bar {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
+  margin-bottom: 12px;
+}
+
+.search-box {
+  padding: 8px 10px;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  font-size: 14px;
+  min-width: 260px;
+}
+
+.area-path-box {
+  min-width: 260px;
+}
+
+.filter-btn {
+  padding: 8px 10px;
+  border: 1px solid #e2e8f0;
+  background: white;
+  border-radius: 6px;
+  cursor: pointer;
+  display: inline-flex;
+  gap: 6px;
+  align-items: center;
+}
+
+.filter-btn.active {
+  background: #eef2ff;
+  border-color: #667eea;
+}
+
+.user-stories-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 12px;
+}
+
+.user-stories-grid .empty-full {
+  grid-column: 1 / -1;
+  text-align: center;
+  padding: 40px;
+  color: #718096;
+}
+
+.story-card {
+  padding: 12px;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  background: #fff;
+
+  /* Speed up large grids by skipping offscreen rendering work */
+  content-visibility: auto;
+  contain-intrinsic-size: 220px;
+}
+
+.story-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:8px }
+.story-title { margin: 0 0 8px 0; font-size: 16px }
+.story-meta { display:flex; gap:8px; flex-wrap:wrap; margin-bottom:8px }
+.story-badge { background:#f1f5f9; padding:4px 8px; border-radius:6px; font-size:12px }
+.story-actions { display:flex; gap:8px; margin-bottom:8px }
+.btn-story-action { padding:6px 10px; border-radius:6px; background:#fff; border:1px solid #e2e8f0; cursor:pointer }
+.story-tests { margin-top: 8px; display:flex; flex-wrap:wrap; gap:6px }
+.btn-story-action.small { padding:6px 10px; font-size:12px }

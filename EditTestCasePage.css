@@ -1,0 +1,56 @@
+.etc-state-text {
+  padding: 20px;
+  text-align: center;
+  color: #999;
+}
+
+.etc-header {
+  justify-content: space-between;
+  align-items: center;
+}
+
+.etc-linked-alert {
+  margin-bottom: 12px;
+}
+
+.etc-form-row {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.etc-flex-1 {
+  flex: 1;
+}
+
+.etc-mb-12 {
+  margin-bottom: 12px;
+}
+
+.etc-description {
+  min-height: 80px;
+}
+
+.etc-grid-fields {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.etc-mt-12 {
+  margin-top: 12px;
+}
+
+.etc-steps-header {
+  justify-content: space-between;
+}
+
+.etc-mt-16 {
+  margin-top: 16px;
+}
+
+.etc-footer-meta {
+  margin-top: 12px;
+  font-size: 12px;
+}

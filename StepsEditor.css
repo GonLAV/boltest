@@ -1,0 +1,68 @@
+/* StepsEditor.css - extracted from StepsEditor.tsx inline styles */
+
+.inline-toolbar {
+  position: fixed;
+  display: none;
+  gap: 8px;
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+  padding: 6px 10px;
+  z-index: 2000;
+  align-items: center;
+}
+
+.inline-toolbar button {
+  background: none;
+  border: none;
+  font-size: 16px;
+  cursor: pointer;
+  padding: 2px 6px;
+  border-radius: 4px;
+  transition: background 0.15s;
+}
+
+.inline-toolbar button:focus {
+  outline: 2px solid #2563eb;
+}
+
+.inline-toolbar button[aria-label*="Color"] {
+  font-size: 18px;
+}
+
+.steps-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.empty-state {
+  text-align: center;
+  color: #718096;
+  padding: 40px 0;
+}
+
+.empty-state-icon {
+  font-size: 48px;
+  margin-bottom: 8px;
+}
+
+.empty-state-title {
+  font-size: 20px;
+  font-weight: 700;
+  margin-bottom: 4px;
+}
+
+.empty-state-text {
+  font-size: 14px;
+}
+
+.step-draggable {
+  transition: opacity 0.2s;
+}
+
+.step-draggable.dragging {
+  opacity: 0.5;
+}

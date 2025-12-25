@@ -1,0 +1,69 @@
+.dash-area-input {
+  min-width: 260px;
+}
+
+.dash-mt-16 {
+  margin-top: 16px;
+}
+
+.dash-mt-20 {
+  margin-top: 20px;
+}
+
+.dash-section-title-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.dash-headline {
+  font-size: 13px;
+  opacity: 0.8;
+}
+
+.dash-loading {
+  padding: 24px;
+}
+
+.dash-empty {
+  grid-column: 1 / -1;
+  text-align: center;
+  padding: 40px;
+}
+
+.dash-clickable {
+  cursor: pointer;
+}
+
+.dash-meta-top {
+  margin-top: 8px;
+}
+
+.dash-explanation {
+  margin-top: 10px;
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+.dash-actions {
+  margin-top: 10px;
+  gap: 8px;
+}
+
+.dash-stat-card-start {
+  align-items: flex-start;
+}
+
+.dash-selected-header {
+  display: flex;
+  justify-content: space-between;
+  width: 100%;
+}
+
+.dash-mt-12 {
+  margin-top: 12px;
+}
+
+.dash-mt-8 {
+  margin-top: 8px;
+}
