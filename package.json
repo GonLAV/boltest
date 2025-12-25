@@ -77,6 +77,7 @@
     "yargs-test-extends": "^1.0.1"
   },
   "scripts": {
+    "start:backend": "node backend/server.mjs",
     "fix": "gts fix && npm run fix:js",
     "fix:js": "standardx --fix '**/*.mjs' && standardx --fix '**/*.cjs' && standardx --fix './*.mjs' && standardx --fix './*.cjs'",
     "posttest": "npm run check",
