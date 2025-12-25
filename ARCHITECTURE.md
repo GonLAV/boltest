@@ -4,7 +4,7 @@
   UI components live at the repository root (`*.tsx`, CSS assets, `main.tsx`, `index.html`). The React entry point renders the router and talks to the backend via `api.ts`/`apiClient.ts`, which already include offline detection and retry handling.
 
 - **Backend (Node HTTP)**  
-  A lightweight, dependency-free server is provided in `backend/server.js`. It exposes `/api/health`, `/api/readiness`, and `/api/status` endpoints so the frontend can quickly detect availability, and it applies backpressure when the server is saturated to stay reliable under load.
+  A lightweight, dependency-free server is provided in `backend/server.mjs`. It exposes `/api/health`, `/api/readiness`, and `/api/status` endpoints so the frontend can quickly detect availability, and it applies backpressure when the server is saturated to stay reliable under load.
 
 ## Running locally
 

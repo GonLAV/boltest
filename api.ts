@@ -16,9 +16,7 @@ let retryQueue: Array<() => void> = [];
 
 // Health check - verify backend is alive
 export async function checkHealth(): Promise<boolean> {
-  const healthUrl = apiBase
-    ? apiBase.replace(/\/$/, '') + '/api/health'
-    : '/api/health';
+  const healthUrl = new URL('/api/health', apiBase).toString();
   try {
     const res = await axios.get(healthUrl, { timeout: 3000 });
     return res.status === 200;

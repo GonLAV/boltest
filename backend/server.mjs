@@ -7,6 +7,7 @@ const PORT = Number(process.env.PORT || 5000);
 const HOST = process.env.HOST || '0.0.0.0';
 const MAX_INFLIGHT = Number(process.env.MAX_INFLIGHT || 250);
 const REQUEST_TIMEOUT = Number(process.env.REQUEST_TIMEOUT || 30000);
+const ALLOWED_ORIGIN = process.env.ALLOWED_ORIGIN || '*';
 
 let inflight = 0;
 let shuttingDown = false;
@@ -43,13 +44,6 @@ const server = http.createServer((req, res) => {
 
   res.on('finish', release);
   res.on('close', release);
-
-  if (req.method === 'OPTIONS') {
-    res.writeHead(204);
-    res.end();
-    release();
-    return;
-  }
 
   if (req.method === 'GET' && url.pathname === '/api/health') {
     return sendJson(res, 200, {
@@ -137,14 +131,18 @@ function statusSnapshot() {
 }
 
 function applyCors(res) {
-  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Origin', ALLOWED_ORIGIN);
   res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type,Authorization,X-OrgUrl,X-PAT,X-Project');
 }
 
 function buildUrl(req) {
   try {
-    const origin = req.headers.host ? `http://${req.headers.host}` : 'http://localhost';
+    const rawHost = req.headers.host || 'localhost';
+    const safeHost = /^[a-zA-Z0-9](?:[a-zA-Z0-9.-]*[a-zA-Z0-9])?(?::[0-9]+)?$/.test(rawHost)
+      ? rawHost
+      : 'localhost';
+    const origin = `http://${safeHost}`;
     return new URL(req.url || '/', origin);
   } catch {
     return new URL('http://localhost');
