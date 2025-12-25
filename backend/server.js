@@ -16,6 +16,12 @@ const server = http.createServer((req, res) => {
 
   applyCors(res);
 
+  if (req.method === 'OPTIONS') {
+    res.writeHead(204);
+    res.end();
+    return;
+  }
+
   if (shuttingDown) {
     return sendJson(res, 503, { status: 'shutting-down' });
   }
