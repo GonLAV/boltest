@@ -1,9 +1,12 @@
 import axios, { AxiosInstance, AxiosError } from 'axios';
+import { API_BASE } from './apiClient';
 import { toast } from 'react-toastify';
 
 // Axios instance with health check & offline handling
+const apiBase = API_BASE || process.env.REACT_APP_API_BASE || 'http://localhost:5000';
+
 export const api: AxiosInstance = axios.create({
-  baseURL: process.env.REACT_APP_API_BASE || 'http://localhost:5000',
+  baseURL: apiBase,
   timeout: 10000,
   withCredentials: true,
 });
@@ -13,8 +16,9 @@ let retryQueue: Array<() => void> = [];
 
 // Health check - verify backend is alive
 export async function checkHealth(): Promise<boolean> {
+  const healthUrl = `${apiBase || ''}`.replace(/\/$/, '') + '/api/health';
   try {
-    const res = await axios.get('http://localhost:5000/api/health', { timeout: 3000 });
+    const res = await axios.get(healthUrl || '/api/health', { timeout: 3000 });
     return res.status === 200;
   } catch {
     return false;
