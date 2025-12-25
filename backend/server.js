@@ -16,12 +16,6 @@ const server = http.createServer((req, res) => {
 
   applyCors(res);
 
-  if (req.method === 'OPTIONS') {
-    res.writeHead(204);
-    res.end();
-    return;
-  }
-
   if (shuttingDown) {
     return sendJson(res, 503, { status: 'shutting-down' });
   }
@@ -34,9 +28,22 @@ const server = http.createServer((req, res) => {
   }
 
   inflight++;
-  res.on('finish', () => {
+  let released = false;
+  const release = () => {
+    if (released) return;
+    released = true;
     inflight = Math.max(0, inflight - 1);
-  });
+  };
+
+  res.on('finish', release);
+  res.on('close', release);
+
+  if (req.method === 'OPTIONS') {
+    res.writeHead(204);
+    res.end();
+    release();
+    return;
+  }
 
   if (req.method === 'GET' && url.pathname === '/api/health') {
     return sendJson(res, 200, {
