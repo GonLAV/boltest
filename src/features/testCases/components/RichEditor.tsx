@@ -50,7 +50,8 @@ export const RichEditor: React.FC<Props> = ({ initialHtml = '', onChange, placeh
   const pickerWrapRef = useRef<HTMLDivElement>(null);
 
   const [openPicker, setOpenPicker] = useState<'text' | 'background' | 'emoji' | 'fontSize' | 'mention' | null>(null);
-  const [activeModal, setActiveModal] = useState<'heading' | 'codeBlock' | 'quote' | 'table' | 'panel' | 'image' | 'mention' | null>(null);
+  const [activeModal, setActiveModal] = useState<'heading' | 'codeBlock' | 'quote' | 'table' | 'panel' | 'image' | 'mention' | 'shortcuts' | null>(null);
+  const [showShortcutsHelp, setShowShortcutsHelp] = useState(false);
 
   const [pickerPos, setPickerPos] = useState<{ top: number; left: number; placement: 'above' | 'below' } | null>(null);
 
@@ -612,6 +613,20 @@ export const RichEditor: React.FC<Props> = ({ initialHtml = '', onChange, placeh
     emitChange();
   };
 
+  const pasteAsPlainText = async () => {
+    ensureFocus();
+    restoreSelection();
+    try {
+      const text = await navigator.clipboard.readText();
+      if (text) {
+        runCommand('insertText', text);
+      }
+    } catch (e) {
+      console.error('Paste failed:', e);
+      alert('Unable to paste. Please use Ctrl+V or check clipboard permissions.');
+    }
+  };
+
   useEffect(() => {
     const el = editorRef.current;
     if (!el) return;
@@ -650,18 +665,18 @@ export const RichEditor: React.FC<Props> = ({ initialHtml = '', onChange, placeh
       <div className="toolbar">
           {/* Undo/Redo */}
           <div className="toolbar-group">
-            <button {...toolbarButtonProps} className="toolbar-btn" onClick={() => runCommand('undo')} title="Undo (Ctrl+Z)"><span>⎌</span></button>
-            <button {...toolbarButtonProps} className="toolbar-btn" onClick={() => runCommand('redo')} title="Redo (Ctrl+Y)"><span>⎌</span></button>
+            <button {...toolbarButtonProps} className="toolbar-btn" onClick={() => runCommand('undo')} title="Undo (Ctrl+Z)" aria-label="Undo last action"><span>⎌</span></button>
+            <button {...toolbarButtonProps} className="toolbar-btn" onClick={() => runCommand('redo')} title="Redo (Ctrl+Y)" aria-label="Redo last action"><span>⎌</span></button>
           </div>
 
           {/* Text Formatting */}
           <div className="toolbar-group">
-            <button {...toolbarButtonProps} className="toolbar-btn" onClick={() => runCommand('bold')} title="Bold (Ctrl+B)"><span className="re-icon-bold">B</span></button>
-            <button {...toolbarButtonProps} className="toolbar-btn" onClick={() => runCommand('italic')} title="Italic (Ctrl+I)"><span className="re-icon-italic">I</span></button>
-            <button {...toolbarButtonProps} className="toolbar-btn" onClick={() => runCommand('underline')} title="Underline (Ctrl+U)"><span className="re-icon-underline">U</span></button>
-            <button {...toolbarButtonProps} className="toolbar-btn" onClick={() => runCommand('strikeThrough')} title="Strikethrough"><span className="re-icon-strike">S</span></button>
-            <button {...toolbarButtonProps} className="toolbar-btn" onClick={applyInlineCode} title="Inline Code"><span className="re-icon-mono">`Code`</span></button>
-            <button {...toolbarButtonProps} className="toolbar-btn" onClick={clearFormatting} title="Clear Formatting"><span>✖</span></button>
+            <button {...toolbarButtonProps} className="toolbar-btn" onClick={() => runCommand('bold')} title="Bold (Ctrl+B)" aria-label="Bold text"><span className="re-icon-bold">B</span></button>
+            <button {...toolbarButtonProps} className="toolbar-btn" onClick={() => runCommand('italic')} title="Italic (Ctrl+I)" aria-label="Italic text"><span className="re-icon-italic">I</span></button>
+            <button {...toolbarButtonProps} className="toolbar-btn" onClick={() => runCommand('underline')} title="Underline (Ctrl+U)" aria-label="Underline text"><span className="re-icon-underline">U</span></button>
+            <button {...toolbarButtonProps} className="toolbar-btn" onClick={() => runCommand('strikeThrough')} title="Strikethrough" aria-label="Strikethrough text"><span className="re-icon-strike">S</span></button>
+            <button {...toolbarButtonProps} className="toolbar-btn" onClick={applyInlineCode} title="Inline Code" aria-label="Apply inline code formatting"><span className="re-icon-mono">`Code`</span></button>
+            <button {...toolbarButtonProps} className="toolbar-btn" onClick={clearFormatting} title="Clear Formatting" aria-label="Clear all formatting"><span>✖</span></button>
           </div>
 
           {/* Font Controls */}
@@ -855,6 +870,7 @@ export const RichEditor: React.FC<Props> = ({ initialHtml = '', onChange, placeh
           {/* Tools */}
           <div className="toolbar-group">
             <button {...toolbarButtonProps} className="toolbar-btn" onClick={findAndReplace} title="Find &amp; Replace"><span>🔍</span></button>
+            <button {...toolbarButtonProps} className="toolbar-btn" onClick={pasteAsPlainText} title="Paste as Plain Text"><span className="re-icon-mono">📋</span></button>
             <button
               {...toolbarButtonProps}
               className={`toolbar-btn ${spellCheckEnabled ? 'active' : ''}`}
@@ -869,6 +885,7 @@ export const RichEditor: React.FC<Props> = ({ initialHtml = '', onChange, placeh
               const charCount = text.length;
               alert(`Word Count: ${wordCount}\nCharacter Count: ${charCount}`);
             }} title="Word Count"><span className="re-icon-mono re-icon-bold">123</span></button>
+            <button {...toolbarButtonProps} className="toolbar-btn" onClick={() => setActiveModal('shortcuts')} title="Keyboard Shortcuts"><span className="re-icon-bold">⌨</span></button>
           </div>
         </div>
 
@@ -878,6 +895,9 @@ export const RichEditor: React.FC<Props> = ({ initialHtml = '', onChange, placeh
           className="editor-content"
           contentEditable
           spellCheck={spellCheckEnabled}
+          role="textbox"
+          aria-label="Rich text editor content"
+          aria-multiline="true"
           onInput={emitChange}
           onBeforeInput={(e) => {
             if (!trackChangesEnabled) return;
@@ -1040,6 +1060,35 @@ export const RichEditor: React.FC<Props> = ({ initialHtml = '', onChange, placeh
                 <div className="re-modal-actions">
                   <button className="re-btn ghost" onClick={() => setActiveModal(null)}>Cancel</button>
                   <button className="re-btn azure" onClick={insertMention}>Mention @User</button>
+                </div>
+              </>
+            )}
+
+            {activeModal === 'shortcuts' && (
+              <>
+                <div className="re-modal-title">⌨️ Keyboard Shortcuts</div>
+                <div style={{ maxHeight: '400px', overflowY: 'auto', padding: '8px' }}>
+                  <div style={{ marginBottom: '16px' }}>
+                    <div style={{ color: '#00ccff', fontWeight: 'bold', marginBottom: '8px', fontSize: '14px' }}>Text Formatting</div>
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '6px', fontSize: '13px', color: 'rgba(255,255,255,0.85)' }}>
+                      <div><kbd style={{ background: 'rgba(0,102,204,0.2)', padding: '2px 6px', borderRadius: '4px', fontSize: '11px' }}>Ctrl+B</kbd> Bold</div>
+                      <div><kbd style={{ background: 'rgba(0,102,204,0.2)', padding: '2px 6px', borderRadius: '4px', fontSize: '11px' }}>Ctrl+I</kbd> Italic</div>
+                      <div><kbd style={{ background: 'rgba(0,102,204,0.2)', padding: '2px 6px', borderRadius: '4px', fontSize: '11px' }}>Ctrl+U</kbd> Underline</div>
+                    </div>
+                  </div>
+                  <div style={{ marginBottom: '16px' }}>
+                    <div style={{ color: '#00ccff', fontWeight: 'bold', marginBottom: '8px', fontSize: '14px' }}>Undo/Redo</div>
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '6px', fontSize: '13px', color: 'rgba(255,255,255,0.85)' }}>
+                      <div><kbd style={{ background: 'rgba(0,102,204,0.2)', padding: '2px 6px', borderRadius: '4px', fontSize: '11px' }}>Ctrl+Z</kbd> Undo</div>
+                      <div><kbd style={{ background: 'rgba(0,102,204,0.2)', padding: '2px 6px', borderRadius: '4px', fontSize: '11px' }}>Ctrl+Y</kbd> Redo</div>
+                    </div>
+                  </div>
+                  <div className="re-modal-info" style={{ marginTop: '16px' }}>
+                    💡 Tip: All formatting buttons have tooltips - hover to see their functions!
+                  </div>
+                </div>
+                <div className="re-modal-actions">
+                  <button className="re-btn azure" onClick={() => setActiveModal(null)}>Got it!</button>
                 </div>
               </>
             )}
