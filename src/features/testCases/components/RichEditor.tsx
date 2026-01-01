@@ -559,6 +559,33 @@ export const RichEditor: React.FC<Props> = ({ initialHtml = '', onChange, placeh
     }
   };
 
+  const applyInlineCode = () => {
+    ensureFocus();
+    restoreSelection();
+    const sel = window.getSelection();
+    if (!sel || sel.rangeCount === 0) return;
+    const range = sel.getRangeAt(0);
+    if (range.collapsed) return;
+
+    const code = document.createElement('code');
+    code.className = 'azure-code-inline';
+    
+    try {
+      code.appendChild(range.extractContents());
+      range.insertNode(code);
+
+      const newRange = document.createRange();
+      newRange.selectNodeContents(code);
+      newRange.collapse(false);
+      sel.removeAllRanges();
+      sel.addRange(newRange);
+      emitChange();
+      saveSelection();
+    } catch (e) {
+      console.error('Inline code failed', e);
+    }
+  };
+
   const insertTaskCheckbox = (completed: boolean) => {
     ensureFocus();
     restoreSelection();
@@ -633,6 +660,7 @@ export const RichEditor: React.FC<Props> = ({ initialHtml = '', onChange, placeh
             <button {...toolbarButtonProps} className="toolbar-btn" onClick={() => runCommand('italic')} title="Italic (Ctrl+I)"><span className="re-icon-italic">I</span></button>
             <button {...toolbarButtonProps} className="toolbar-btn" onClick={() => runCommand('underline')} title="Underline (Ctrl+U)"><span className="re-icon-underline">U</span></button>
             <button {...toolbarButtonProps} className="toolbar-btn" onClick={() => runCommand('strikeThrough')} title="Strikethrough"><span className="re-icon-strike">S</span></button>
+            <button {...toolbarButtonProps} className="toolbar-btn" onClick={applyInlineCode} title="Inline Code"><span className="re-icon-mono">`Code`</span></button>
             <button {...toolbarButtonProps} className="toolbar-btn" onClick={clearFormatting} title="Clear Formatting"><span>✖</span></button>
           </div>
 
@@ -739,7 +767,8 @@ export const RichEditor: React.FC<Props> = ({ initialHtml = '', onChange, placeh
           <div className="toolbar-group">
             <button {...toolbarButtonProps} className="toolbar-btn" onClick={() => runCommand('insertUnorderedList')} title="Bulleted List"><span className="re-icon-20">●</span></button>
             <button {...toolbarButtonProps} className="toolbar-btn" onClick={() => runCommand('insertOrderedList')} title="Numbered List"><span className="re-icon-bold">1.</span></button>
-            <button {...toolbarButtonProps} className="toolbar-btn" onClick={() => insertTaskCheckbox(false)} title="Checklist"><span>☐</span></button>
+            <button {...toolbarButtonProps} className="toolbar-btn" onClick={() => insertTaskCheckbox(false)} title="Task Unchecked"><span>☐</span></button>
+            <button {...toolbarButtonProps} className="toolbar-btn" onClick={() => insertTaskCheckbox(true)} title="Task Checked"><span>☑️</span></button>
           </div>
 
           {/* Insert Content */}
@@ -812,6 +841,7 @@ export const RichEditor: React.FC<Props> = ({ initialHtml = '', onChange, placeh
           {/* Collaboration */}
           <div className="toolbar-group">
             <button {...toolbarButtonProps} className="toolbar-btn" onClick={addCommentToSelection} title="Add Comment"><span>💬</span></button>
+            <button {...toolbarButtonProps} className="toolbar-btn" onClick={() => setActiveModal('mention')} title="Mention User"><span className="re-icon-bold">@</span></button>
             <button
               {...toolbarButtonProps}
               className={`toolbar-btn ${trackChangesEnabled ? 'active' : ''}`}
