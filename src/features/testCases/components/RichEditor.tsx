@@ -560,7 +560,7 @@ export const RichEditor: React.FC<Props> = ({ initialHtml = '', onChange, placeh
     }
   };
 
-  const getValidSelection = (): Range | null => {
+  const getNonEmptySelection = (): Range | null => {
     const sel = window.getSelection();
     if (!sel || sel.rangeCount === 0) return null;
     const range = sel.getRangeAt(0);
@@ -571,16 +571,19 @@ export const RichEditor: React.FC<Props> = ({ initialHtml = '', onChange, placeh
   const applyInlineCode = () => {
     ensureFocus();
     restoreSelection();
-    const range = getValidSelection();
+    const range = getNonEmptySelection();
     if (!range) return;
 
     const code = document.createElement('code');
     code.className = 'azure-code-inline';
     
     try {
+      // Clone range before extraction to preserve position
+      const clonedRange = range.cloneRange();
       code.appendChild(range.extractContents());
-      range.insertNode(code);
+      clonedRange.insertNode(code);
 
+      // Create a new range after insertion
       const newRange = document.createRange();
       newRange.selectNodeContents(code);
       newRange.collapse(false);
@@ -629,10 +632,10 @@ export const RichEditor: React.FC<Props> = ({ initialHtml = '', onChange, placeh
     // Check if Clipboard API is available
     if (!navigator.clipboard || !navigator.clipboard.readText) {
       console.warn('Clipboard API not available');
-      const fallbackText = prompt('Clipboard API not available. Please paste your text here:');
-      if (fallbackText) {
-        runCommand('insertText', fallbackText);
-      }
+      // Show info message instead of blocking prompt
+      const infoMsg = 'Clipboard API not available. Please use Ctrl+V (or Cmd+V on Mac) to paste, then use the Clear Formatting (✖) button to remove formatting.';
+      // You could show this in a toast/notification if available
+      console.info(infoMsg);
       return;
     }
     
@@ -643,11 +646,9 @@ export const RichEditor: React.FC<Props> = ({ initialHtml = '', onChange, placeh
       }
     } catch (e) {
       console.error('Paste failed:', e);
-      // Fallback to prompt
-      const fallbackText = prompt('Unable to access clipboard. Please paste your text here:');
-      if (fallbackText) {
-        runCommand('insertText', fallbackText);
-      }
+      // Show helpful message instead of blocking prompt
+      const helpMsg = 'Unable to access clipboard. Please use Ctrl+V (or Cmd+V on Mac) to paste, then use the Clear Formatting (✖) button to remove formatting.';
+      console.info(helpMsg);
     }
   };
 
