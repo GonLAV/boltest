@@ -23,8 +23,8 @@ type EditorToolbarProps = {
   setActiveModal: (modal: 'heading' | 'codeBlock' | 'quote' | 'table' | 'panel' | 'image' | 'mention' | 'shortcuts' | null) => void;
   
   // Picker control
-  openPicker: 'text' | 'background' | 'emoji' | null;
-  setOpenPicker: (picker: 'text' | 'background' | 'emoji' | null) => void;
+  openPicker: 'text' | 'background' | 'emoji' | 'fontSize' | 'mention' | null;
+  setOpenPicker: (picker: 'text' | 'background' | 'emoji' | 'fontSize' | 'mention' | null) => void;
   setPickerPos: (pos: { top: number; left: number; placement: 'above' | 'below' } | null) => void;
   computePickerPos: (rect: DOMRect) => { top: number; left: number; placement: 'above' | 'below' };
   
