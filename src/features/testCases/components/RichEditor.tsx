@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState, useCallback } from 'react';
+import { ColorPicker, EmojiPicker, EditorModals, EditorToolbar } from './RichEditorComponents';
 import './rich-editor.css';
 
 type Props = {
@@ -50,7 +51,8 @@ export const RichEditor: React.FC<Props> = ({ initialHtml = '', onChange, placeh
   const pickerWrapRef = useRef<HTMLDivElement>(null);
 
   const [openPicker, setOpenPicker] = useState<'text' | 'background' | 'emoji' | 'fontSize' | 'mention' | null>(null);
-  const [activeModal, setActiveModal] = useState<'heading' | 'codeBlock' | 'quote' | 'table' | 'panel' | 'image' | 'mention' | null>(null);
+  const [activeModal, setActiveModal] = useState<'heading' | 'codeBlock' | 'quote' | 'table' | 'panel' | 'image' | 'mention' | 'shortcuts' | null>(null);
+  const [showShortcutsHelp, setShowShortcutsHelp] = useState(false);
 
   const [pickerPos, setPickerPos] = useState<{ top: number; left: number; placement: 'above' | 'below' } | null>(null);
 
@@ -559,6 +561,45 @@ export const RichEditor: React.FC<Props> = ({ initialHtml = '', onChange, placeh
     }
   };
 
+  const getNonEmptySelection = (): Range | null => {
+    const sel = window.getSelection();
+    if (!sel || sel.rangeCount === 0) return null;
+    const range = sel.getRangeAt(0);
+    if (range.collapsed) return null;
+    return range;
+  };
+
+  const applyInlineCode = () => {
+    ensureFocus();
+    restoreSelection();
+    const range = getNonEmptySelection();
+    if (!range) return;
+
+    const code = document.createElement('code');
+    code.className = 'azure-code-inline';
+    
+    try {
+      // Clone range before extraction to preserve position
+      const clonedRange = range.cloneRange();
+      code.appendChild(range.extractContents());
+      clonedRange.insertNode(code);
+
+      // Create a new range after insertion
+      const newRange = document.createRange();
+      newRange.selectNodeContents(code);
+      newRange.collapse(false);
+      const sel = window.getSelection();
+      if (sel) {
+        sel.removeAllRanges();
+        sel.addRange(newRange);
+      }
+      emitChange();
+      saveSelection();
+    } catch (e) {
+      console.error('Inline code failed', e);
+    }
+  };
+
   const insertTaskCheckbox = (completed: boolean) => {
     ensureFocus();
     restoreSelection();
@@ -583,6 +624,33 @@ export const RichEditor: React.FC<Props> = ({ initialHtml = '', onChange, placeh
     setMentionHandle('');
     setActiveModal(null);
     emitChange();
+  };
+
+  const pasteAsPlainText = async () => {
+    ensureFocus();
+    restoreSelection();
+    
+    // Check if Clipboard API is available
+    if (!navigator.clipboard || !navigator.clipboard.readText) {
+      console.warn('Clipboard API not available');
+      // Show info message instead of blocking prompt
+      const infoMsg = 'Clipboard API not available. Please use Ctrl+V (or Cmd+V on Mac) to paste, then use the Clear Formatting (✖) button to remove formatting.';
+      // You could show this in a toast/notification if available
+      console.info(infoMsg);
+      return;
+    }
+    
+    try {
+      const text = await navigator.clipboard.readText();
+      if (text) {
+        runCommand('insertText', text);
+      }
+    } catch (e) {
+      console.error('Paste failed:', e);
+      // Show helpful message instead of blocking prompt
+      const helpMsg = 'Unable to access clipboard. Please use Ctrl+V (or Cmd+V on Mac) to paste, then use the Clear Formatting (✖) button to remove formatting.';
+      console.info(helpMsg);
+    }
   };
 
   useEffect(() => {
@@ -612,235 +680,38 @@ export const RichEditor: React.FC<Props> = ({ initialHtml = '', onChange, placeh
     document.addEventListener('selectionchange', handleSelection);
     return () => document.removeEventListener('selectionchange', handleSelection);
   }, []);
-  const toolbarButtonProps = {
-    onMouseDown: (e: React.MouseEvent) => {
-      e.preventDefault();
-    },
-  };
 
   const editorUi = (
     <>
-      <div className="toolbar">
-          {/* Undo/Redo */}
-          <div className="toolbar-group">
-            <button {...toolbarButtonProps} className="toolbar-btn" onClick={() => runCommand('undo')} title="Undo (Ctrl+Z)"><span>⎌</span></button>
-            <button {...toolbarButtonProps} className="toolbar-btn" onClick={() => runCommand('redo')} title="Redo (Ctrl+Y)"><span>⎌</span></button>
-          </div>
-
-          {/* Text Formatting */}
-          <div className="toolbar-group">
-            <button {...toolbarButtonProps} className="toolbar-btn" onClick={() => runCommand('bold')} title="Bold (Ctrl+B)"><span className="re-icon-bold">B</span></button>
-            <button {...toolbarButtonProps} className="toolbar-btn" onClick={() => runCommand('italic')} title="Italic (Ctrl+I)"><span className="re-icon-italic">I</span></button>
-            <button {...toolbarButtonProps} className="toolbar-btn" onClick={() => runCommand('underline')} title="Underline (Ctrl+U)"><span className="re-icon-underline">U</span></button>
-            <button {...toolbarButtonProps} className="toolbar-btn" onClick={() => runCommand('strikeThrough')} title="Strikethrough"><span className="re-icon-strike">S</span></button>
-            <button {...toolbarButtonProps} className="toolbar-btn" onClick={clearFormatting} title="Clear Formatting"><span>✖</span></button>
-          </div>
-
-          {/* Font Controls */}
-          <div className="toolbar-group">
-            <select className="toolbar-select" onChange={(e) => runCommand('fontName', e.target.value)} title="Font Family">
-              <option>Segoe UI</option>
-              <option>Arial</option>
-              <option>Helvetica</option>
-              <option>Times New Roman</option>
-              <option>Courier New</option>
-              <option>Georgia</option>
-              <option>Verdana</option>
-            </select>
-            <select className="toolbar-select" defaultValue="16" onChange={(e) => applyFontSize(e.target.value)} title="Font Size">
-              <option value="12">12</option>
-              <option value="14">14</option>
-              <option value="16">16</option>
-              <option value="18">18</option>
-              <option value="20">20</option>
-              <option value="24">24</option>
-              <option value="28">28</option>
-            </select>
-            <button {...toolbarButtonProps} className="toolbar-btn" onClick={() => changeFontSize(-2)} title="Decrease Font Size"><span className="re-icon-18">−</span></button>
-            <button {...toolbarButtonProps} className="toolbar-btn" onClick={() => changeFontSize(+2)} title="Increase Font Size"><span className="re-icon-18">+</span></button>
-          </div>
-
-          {/* Text Styles */}
-          <div className="toolbar-group">
-            <select className="toolbar-select" onChange={(e) => applyParagraphStyle(e.target.value)} title="Paragraph Style" defaultValue="normal">
-              <option value="normal">Normal</option>
-              <option value="title">Title</option>
-              <option value="subtitle">Subtitle</option>
-              <option value="quote">Quote</option>
-              <option value="code">Code</option>
-            </select>
-          </div>
-
-          {/* Colors */}
-          <div className="toolbar-group">
-            <button
-              {...toolbarButtonProps}
-              ref={textColorBtnRef}
-              className="toolbar-btn"
-              onClick={() => {
-                saveSelection();
-                const next = openPicker === 'text' ? null : 'text';
-                setOpenPicker(next);
-                if (!next) {
-                  setPickerPos(null);
-                  return;
-                }
-                const rect = textColorBtnRef.current?.getBoundingClientRect();
-                if (rect) setPickerPos(computePickerPos(rect));
-              }}
-              title="Text Color"
-            >
-              <span className="re-icon-16 re-icon-bold re-icon-text-color">A</span>
-            </button>
-
-            <button
-              {...toolbarButtonProps}
-              ref={highlightColorBtnRef}
-              className="toolbar-btn"
-              onClick={() => {
-                saveSelection();
-                const next = openPicker === 'background' ? null : 'background';
-                setOpenPicker(next);
-                if (!next) {
-                  setPickerPos(null);
-                  return;
-                }
-                const rect = highlightColorBtnRef.current?.getBoundingClientRect();
-                if (rect) setPickerPos(computePickerPos(rect));
-              }}
-              title="Highlight Color"
-            >
-              <span className="re-icon-16 re-icon-bold re-icon-bg-color">A</span>
-            </button>
-          </div>
-
-          {/* Script & Special */}
-          <div className="toolbar-group">
-            <button {...toolbarButtonProps} className="toolbar-btn" onClick={() => runCommand('superscript')} title="Superscript"><span>x²</span></button>
-            <button {...toolbarButtonProps} className="toolbar-btn" onClick={() => runCommand('subscript')} title="Subscript"><span>x₂</span></button>
-            <button {...toolbarButtonProps} className="toolbar-btn" onClick={insertSpecialCharacter} title="Special Characters"><span className="re-icon-18">Ω</span></button>
-          </div>
-
-          {/* Alignment */}
-          <div className="toolbar-group">
-            <button {...toolbarButtonProps} className="toolbar-btn" onClick={() => runCommand('justifyLeft')} title="Align Left"><span className="re-icon-18">☰</span></button>
-            <button {...toolbarButtonProps} className="toolbar-btn" onClick={() => runCommand('justifyCenter')} title="Align Center"><span className="re-icon-18">☷</span></button>
-            <button {...toolbarButtonProps} className="toolbar-btn" onClick={() => runCommand('justifyRight')} title="Align Right"><span className="re-icon-18">☰</span></button>
-            <button {...toolbarButtonProps} className="toolbar-btn" onClick={() => runCommand('justifyFull')} title="Justify"><span className="re-icon-18">▭</span></button>
-          </div>
-
-          {/* Indentation */}
-          <div className="toolbar-group">
-            <button {...toolbarButtonProps} className="toolbar-btn" onClick={() => runCommand('indent')} title="Indent"><span className="re-icon-18">⇥</span></button>
-            <button {...toolbarButtonProps} className="toolbar-btn" onClick={() => runCommand('outdent')} title="Outdent"><span className="re-icon-18">⇤</span></button>
-          </div>
-
-          {/* Lists */}
-          <div className="toolbar-group">
-            <button {...toolbarButtonProps} className="toolbar-btn" onClick={() => runCommand('insertUnorderedList')} title="Bulleted List"><span className="re-icon-20">●</span></button>
-            <button {...toolbarButtonProps} className="toolbar-btn" onClick={() => runCommand('insertOrderedList')} title="Numbered List"><span className="re-icon-bold">1.</span></button>
-            <button {...toolbarButtonProps} className="toolbar-btn" onClick={() => insertTaskCheckbox(false)} title="Checklist"><span>☐</span></button>
-          </div>
-
-          {/* Insert Content */}
-          <div className="toolbar-group">
-            <button {...toolbarButtonProps} className="toolbar-btn" onClick={() => runCommand('insertHorizontalRule')} title="Horizontal Divider"><span className="re-icon-18">―</span></button>
-            <button {...toolbarButtonProps} className="toolbar-btn" onClick={() => setActiveModal('table')} title="Insert Table"><span>⊞</span></button>
-            <button {...toolbarButtonProps} className="toolbar-btn" onClick={() => setActiveModal('image')} title="Insert Image"><span>🖼</span></button>
-            <button {...toolbarButtonProps} className="toolbar-btn" onClick={() => runCommand('createLink', 'https://')} title="Insert Link"><span>🔗</span></button>
-            <button {...toolbarButtonProps} className="toolbar-btn" onClick={() => runCommand('unlink')} title="Remove Link"><span>🔓</span></button>
-          </div>
-
-          {/* Media & Embed */}
-          <div className="toolbar-group">
-            <button {...toolbarButtonProps} className="toolbar-btn" onClick={() => {
-              const url = prompt('Enter video URL (YouTube, Vimeo, etc.):');
-              if (url) {
-                const iframe = document.createElement('iframe');
-                iframe.src = url;
-                iframe.width = '560';
-                iframe.height = '315';
-                iframe.style.borderRadius = '8px';
-                insertElement(iframe);
-              }
-            }} title="Embed Video"><span>▶</span></button>
-            <button {...toolbarButtonProps} className="toolbar-btn" onClick={() => {
-              const fileInput = document.createElement('input');
-              fileInput.type = 'file';
-              fileInput.onchange = (e: any) => {
-                const file = e.target.files[0];
-                if (file) {
-                  const a = document.createElement('a');
-                  a.href = URL.createObjectURL(file);
-                  a.download = file.name;
-                  a.textContent = '📎 ' + file.name;
-                  insertElement(a);
-                }
-              };
-              fileInput.click();
-            }} title="Attach File"><span>📎</span></button>
-            <button
-              {...toolbarButtonProps}
-              ref={emojiBtnRef}
-              className="toolbar-btn"
-              onClick={() => {
-                saveSelection();
-                const next = openPicker === 'emoji' ? null : 'emoji';
-                setOpenPicker(next);
-                if (!next) {
-                  setPickerPos(null);
-                  return;
-                }
-                const rect = emojiBtnRef.current?.getBoundingClientRect();
-                if (rect) setPickerPos(computePickerPos(rect));
-              }}
-              title="Insert Emoji"
-            >
-              <span>☺</span>
-            </button>
-          </div>
-
-          {/* Advanced */}
-          <div className="toolbar-group">
-            <button {...toolbarButtonProps} className="toolbar-btn" onClick={insertMathFormula} title="Math Formula"><span className="re-icon-18">Σ</span></button>
-            <button {...toolbarButtonProps} className="toolbar-btn" onClick={() => setActiveModal('codeBlock')} title="Code Block"><span className="re-icon-mono re-icon-bold">&lt;/&gt;</span></button>
-            <button {...toolbarButtonProps} className="toolbar-btn" onClick={() => setActiveModal('heading')} title="Heading Styles"><span className="re-icon-16 re-icon-bold">H</span></button>
-            <button {...toolbarButtonProps} className="toolbar-btn" onClick={() => setActiveModal('panel')} title="Info Block"><span className="re-icon-bold">ⓘ</span></button>
-            <button {...toolbarButtonProps} className="toolbar-btn" onClick={() => setActiveModal('quote')} title="Quote Block"><span className="re-icon-20">&quot;</span></button>
-          </div>
-
-          {/* Collaboration */}
-          <div className="toolbar-group">
-            <button {...toolbarButtonProps} className="toolbar-btn" onClick={addCommentToSelection} title="Add Comment"><span>💬</span></button>
-            <button
-              {...toolbarButtonProps}
-              className={`toolbar-btn ${trackChangesEnabled ? 'active' : ''}`}
-              onClick={toggleTrackChanges}
-              title={trackChangesEnabled ? 'Track Changes (On)' : 'Track Changes (Off)'}
-            >
-              <span>✎</span>
-            </button>
-          </div>
-
-          {/* Tools */}
-          <div className="toolbar-group">
-            <button {...toolbarButtonProps} className="toolbar-btn" onClick={findAndReplace} title="Find &amp; Replace"><span>🔍</span></button>
-            <button
-              {...toolbarButtonProps}
-              className={`toolbar-btn ${spellCheckEnabled ? 'active' : ''}`}
-              onClick={toggleSpellCheck}
-              title={spellCheckEnabled ? 'Spell Check (On)' : 'Spell Check (Off)'}
-            >
-              <span className="re-icon-18">✓</span>
-            </button>
-            <button {...toolbarButtonProps} className="toolbar-btn" onClick={() => {
-              const text = editorRef.current?.textContent || '';
-              const wordCount = text.trim().split(/\s+/).length;
-              const charCount = text.length;
-              alert(`Word Count: ${wordCount}\nCharacter Count: ${charCount}`);
-            }} title="Word Count"><span className="re-icon-mono re-icon-bold">123</span></button>
-          </div>
-        </div>
+      <EditorToolbar
+        runCommand={runCommand}
+        applyInlineCode={applyInlineCode}
+        clearFormatting={clearFormatting}
+        applyFontSize={applyFontSize}
+        changeFontSize={changeFontSize}
+        applyParagraphStyle={applyParagraphStyle}
+        insertSpecialCharacter={insertSpecialCharacter}
+        insertTaskCheckbox={insertTaskCheckbox}
+        insertMathFormula={insertMathFormula}
+        addCommentToSelection={addCommentToSelection}
+        toggleTrackChanges={toggleTrackChanges}
+        findAndReplace={findAndReplace}
+        pasteAsPlainText={pasteAsPlainText}
+        toggleSpellCheck={toggleSpellCheck}
+        insertElement={insertElement}
+        saveSelection={saveSelection}
+        setActiveModal={setActiveModal}
+        openPicker={openPicker}
+        setOpenPicker={setOpenPicker}
+        setPickerPos={setPickerPos}
+        computePickerPos={computePickerPos}
+        textColorBtnRef={textColorBtnRef}
+        highlightColorBtnRef={highlightColorBtnRef}
+        emojiBtnRef={emojiBtnRef}
+        trackChangesEnabled={trackChangesEnabled}
+        spellCheckEnabled={spellCheckEnabled}
+        editorRef={editorRef}
+      />
 
       <div className="editor-area">
         <div
@@ -848,6 +719,9 @@ export const RichEditor: React.FC<Props> = ({ initialHtml = '', onChange, placeh
           className="editor-content"
           contentEditable
           spellCheck={spellCheckEnabled}
+          role="textbox"
+          aria-label="Rich text editor content"
+          aria-multiline="true"
           onInput={emitChange}
           onBeforeInput={(e) => {
             if (!trackChangesEnabled) return;
@@ -1010,6 +884,35 @@ export const RichEditor: React.FC<Props> = ({ initialHtml = '', onChange, placeh
                 <div className="re-modal-actions">
                   <button className="re-btn ghost" onClick={() => setActiveModal(null)}>Cancel</button>
                   <button className="re-btn azure" onClick={insertMention}>Mention @User</button>
+                </div>
+              </>
+            )}
+
+            {activeModal === 'shortcuts' && (
+              <>
+                <div className="re-modal-title">⌨️ Keyboard Shortcuts</div>
+                <div className="re-shortcuts-container">
+                  <div className="re-shortcuts-section">
+                    <div className="re-shortcuts-section-title">Text Formatting</div>
+                    <div className="re-shortcuts-grid">
+                      <div><kbd className="re-kbd">Ctrl+B</kbd> Bold</div>
+                      <div><kbd className="re-kbd">Ctrl+I</kbd> Italic</div>
+                      <div><kbd className="re-kbd">Ctrl+U</kbd> Underline</div>
+                    </div>
+                  </div>
+                  <div className="re-shortcuts-section">
+                    <div className="re-shortcuts-section-title">Undo/Redo</div>
+                    <div className="re-shortcuts-grid">
+                      <div><kbd className="re-kbd">Ctrl+Z</kbd> Undo</div>
+                      <div><kbd className="re-kbd">Ctrl+Y</kbd> Redo</div>
+                    </div>
+                  </div>
+                  <div className="re-modal-info">
+                    💡 Tip: All formatting buttons have tooltips - hover to see their functions!
+                  </div>
+                </div>
+                <div className="re-modal-actions">
+                  <button className="re-btn azure" onClick={() => setActiveModal(null)}>Got it!</button>
                 </div>
               </>
             )}

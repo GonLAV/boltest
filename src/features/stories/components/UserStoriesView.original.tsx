@@ -67,47 +67,11 @@ const UserStoriesView: React.FC = () => {
     localStorage.getItem('boltest:areaPath') || "Epos\\RnD\\Abigail's Team"
   );
   const [sprint, setSprint] = useState<string>(localStorage.getItem('boltest:sprint') || 'Current');
-  
-  // New features
-  const [showKeyboardHelp, setShowKeyboardHelp] = useState(false);
-  const [selectedStories, setSelectedStories] = useState<Set<number>>(new Set());
-  const [showStats, setShowStats] = useState(false);
-  const [sortBy, setSortBy] = useState<'id' | 'title' | 'state'>('id');
-  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
-  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
-  
   const sprintOptions = useMemo(() => [
     'Current', '2602', '2601', '2600', '2516', '2515', '2514', '2513', '2512', '2511'
   ], []);
   const didInitFetch = useRef(false);
   const loadMoreRef = useRef<HTMLDivElement>(null);
-
-  // Keyboard shortcuts
-  useEffect(() => {
-    const handleKeyboard = (e: KeyboardEvent) => {
-      // Ctrl/Cmd + K for keyboard help
-      if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
-        e.preventDefault();
-        setShowKeyboardHelp(true);
-      }
-      // Ctrl/Cmd + A to select all
-      if ((e.ctrlKey || e.metaKey) && e.key === 'a' && e.target instanceof HTMLInputElement === false) {
-        e.preventDefault();
-        if (selectedStories.size === filtered.length) {
-          setSelectedStories(new Set());
-        } else {
-          setSelectedStories(new Set(filtered.map(s => s.id)));
-        }
-      }
-      // Escape to clear selection
-      if (e.key === 'Escape') {
-        setSelectedStories(new Set());
-      }
-    };
-
-    window.addEventListener('keydown', handleKeyboard);
-    return () => window.removeEventListener('keydown', handleKeyboard);
-  }, [selectedStories]);
 
   const fetchUserStories = useCallback(async () => {
     try {
@@ -127,6 +91,7 @@ const UserStoriesView: React.FC = () => {
         ? `${effectiveProject}\\${selectedSprint}`
         : '@CurrentIteration';
 
+      // ⚡ Progressive load: fetch all but display immediately
       const resp = await storiesApi.getUserStories(
         effectiveOrgUrl, 
         effectiveProject, 
@@ -135,6 +100,7 @@ const UserStoriesView: React.FC = () => {
       );
       const userStories: UserStory[] = resp?.data?.data?.userStories || [];
       
+      // Process and cache immediately
       setAllStories(userStories);
       const withTestsList = userStories.filter((story: UserStory) => (story.relatedTestCases || []).length > 0);
       const noTestsList = userStories.filter((story: UserStory) => (story.relatedTestCases || []).length === 0);
@@ -144,7 +110,7 @@ const UserStoriesView: React.FC = () => {
       if (userStories.length === 0) {
         toast.warning(`No stories found for area path: ${effectiveAreaPath || '(all)'}`);
       } else {
-        toast.success(`✓ Loaded ${userStories.length} stories (${noTestsList.length} need tests)`);
+        toast.success(`✓ Loaded ${userStories.length} stories`);
       }
     } catch (err: any) {
       console.error('Error fetching user stories:', err);
@@ -179,40 +145,17 @@ const UserStoriesView: React.FC = () => {
   }, [filter, allStories, storiesNoTests, storiesWithTests]);
 
   const filtered = useMemo(() => {
-    let result = stories.filter((story) => {
+    return stories.filter((story) => {
       const q = deferredSearch.trim().toLowerCase();
       const matchSearch = q
         ? story.title.toLowerCase().includes(q) || story.id.toString().includes(q)
         : true;
       return matchSearch;
     });
-
-    // Apply sorting
-    result.sort((a, b) => {
-      let aVal: any = a[sortBy];
-      let bVal: any = b[sortBy];
-
-      if (aVal < bVal) return sortDirection === 'asc' ? -1 : 1;
-      if (aVal > bVal) return sortDirection === 'asc' ? 1 : -1;
-      return 0;
-    });
-
-    return result;
-  }, [deferredSearch, stories, sortBy, sortDirection]);
-
-  const stats = useMemo(() => {
-    return {
-      total: allStories.length,
-      withTests: storiesWithTests.length,
-      noTests: storiesNoTests.length,
-      testCoverage: allStories.length > 0
-        ? Math.round((storiesWithTests.length / allStories.length) * 100)
-        : 0,
-      selected: selectedStories.size,
-    };
-  }, [allStories, storiesWithTests, storiesNoTests, selectedStories]);
+  }, [deferredSearch, stories]);
 
   const handleAddTest = (storyId: number, storyTitle: string) => {
+    // Navigate to create test case with pre-filled user story (state keeps form data intact)
     navigate('/app/create', { state: { userStoryId: storyId, userStoryTitle: storyTitle } });
   };
 
@@ -230,75 +173,6 @@ const UserStoriesView: React.FC = () => {
     navigate(`/app/edit-test/${tests[0].id}`);
   };
 
-  const toggleSelection = (storyId: number) => {
-    const newSelected = new Set(selectedStories);
-    if (newSelected.has(storyId)) {
-      newSelected.delete(storyId);
-    } else {
-      newSelected.add(storyId);
-    }
-    setSelectedStories(newSelected);
-  };
-
-  const handleBulkAddTests = () => {
-    if (selectedStories.size === 0) {
-      toast.warning('No stories selected');
-      return;
-    }
-
-    toast.info(`Creating test cases for ${selectedStories.size} stories...`);
-    
-    // Navigate to create with first story, show info about batch creation
-    const firstStoryId = Array.from(selectedStories)[0];
-    const firstStory = stories.find(s => s.id === firstStoryId);
-    
-    if (firstStory) {
-      navigate('/app/create', { 
-        state: { 
-          userStoryId: firstStory.id, 
-          userStoryTitle: firstStory.title,
-          batchCount: selectedStories.size 
-        } 
-      });
-    }
-  };
-
-  const exportToCSV = () => {
-    const data = filtered.map(story => ({
-      ID: story.id,
-      Title: story.title,
-      State: story.state,
-      'Assigned To': story.assignedTo || '',
-      'Area Path': story.areaPath || '',
-      'Test Count': (story.relatedTestCases || []).length,
-      'Has Tests': (story.relatedTestCases || []).length > 0 ? 'Yes' : 'No'
-    }));
-
-    const headers = Object.keys(data[0] || {});
-    const csv = [
-      headers.join(','),
-      ...data.map(row => headers.map(h => `"${(row as any)[h]}"`).join(','))
-    ].join('\n');
-
-    const blob = new Blob([csv], { type: 'text/csv' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `user-stories-${new Date().toISOString().split('T')[0]}.csv`;
-    a.click();
-    URL.revokeObjectURL(url);
-    toast.success(`Exported ${data.length} user stories to CSV`);
-  };
-
-  const handleSort = (field: typeof sortBy) => {
-    if (sortBy === field) {
-      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
-    } else {
-      setSortBy(field);
-      setSortDirection('asc');
-    }
-  };
-
   if (loading) {
     return (
       <div className="page-card tc-shell tc-wide" id="myStoriesView">
@@ -309,53 +183,6 @@ const UserStoriesView: React.FC = () => {
 
   return (
     <div className="page-card tc-shell tc-wide" id="myStoriesView">
-      {/* Header */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-        <h2 style={{ margin: 0 }}>👤 My User Stories</h2>
-        <div style={{ display: 'flex', gap: '8px' }}>
-          <button className="btn-secondary" onClick={() => setShowStats(!showStats)} title="Toggle Statistics">
-            📊 Stats
-          </button>
-          <button className="btn-secondary" onClick={() => setShowKeyboardHelp(true)} title="Keyboard Shortcuts (Ctrl+K)">
-            ⌨️
-          </button>
-          <button className="btn-secondary" onClick={exportToCSV} title="Export to CSV">
-            📥 Export
-          </button>
-        </div>
-      </div>
-
-      {/* Statistics Panel */}
-      {showStats && (
-        <div className="tc-banner info" style={{ marginBottom: '16px' }}>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '16px' }}>
-            <div><strong>Total Stories:</strong> {stats.total}</div>
-            <div><strong>With Tests:</strong> {stats.withTests}</div>
-            <div><strong>Need Tests:</strong> {stats.noTests}</div>
-            <div><strong>Test Coverage:</strong> {stats.testCoverage}%</div>
-            <div><strong>Selected:</strong> {stats.selected}</div>
-          </div>
-        </div>
-      )}
-
-      {/* Bulk Actions */}
-      {selectedStories.size > 0 && (
-        <div className="tc-banner success" style={{ marginBottom: '16px' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <strong>{selectedStories.size} story/stories selected</strong>
-            <div style={{ display: 'flex', gap: '8px' }}>
-              <button className="btn-primary" onClick={handleBulkAddTests}>
-                ➕ Create Tests for Selected
-              </button>
-              <button className="btn-secondary danger" onClick={() => setSelectedStories(new Set())}>
-                ✕ Clear Selection
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Filters */}
       <div className="filter-bar">
         <input
           type="text"
@@ -406,47 +233,7 @@ const UserStoriesView: React.FC = () => {
         />
       </div>
 
-      {/* View & Sort Controls */}
-      <div style={{ display: 'flex', gap: '8px', marginBottom: '16px', flexWrap: 'wrap' }}>
-        <div style={{ display: 'flex', gap: '4px' }}>
-          <button
-            className={`btn-secondary ${viewMode === 'grid' ? 'active' : ''}`}
-            onClick={() => setViewMode('grid')}
-            title="Grid view"
-          >
-            ▦
-          </button>
-          <button
-            className={`btn-secondary ${viewMode === 'list' ? 'active' : ''}`}
-            onClick={() => setViewMode('list')}
-            title="List view"
-          >
-            ☰
-          </button>
-        </div>
-
-        <select
-          value={sortBy}
-          onChange={(e) => handleSort(e.target.value as typeof sortBy)}
-          className="search-box"
-          style={{ width: 'auto' }}
-        >
-          <option value="id">Sort by ID</option>
-          <option value="title">Sort by Title</option>
-          <option value="state">Sort by State</option>
-        </select>
-
-        <button
-          className="btn-secondary"
-          onClick={() => setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc')}
-          title={`Sort ${sortDirection === 'asc' ? 'descending' : 'ascending'}`}
-        >
-          {sortDirection === 'asc' ? '↑' : '↓'}
-        </button>
-      </div>
-
-      {/* Stories Grid */}
-      <div className={`user-stories-grid ${viewMode === 'list' ? 'list-view' : ''}`} id="storiesGrid">
+      <div className="user-stories-grid" id="storiesGrid">
         {filtered.length === 0 ? (
           <div className="empty-full"><p>No user stories found</p></div>
         ) : (
@@ -454,26 +241,13 @@ const UserStoriesView: React.FC = () => {
             const tests = (story.relatedTestCases || []).filter((tc) => tc && tc.id);
             const hasTests = tests.length > 0;
             const testCount = tests.length;
-            const isSelected = selectedStories.has(story.id);
-            
             return (
               <div
                 key={story.id}
-                className={`story-card ${hasTests ? 'has-tests' : 'no-tests'} ${isSelected ? 'selected' : ''}`}
+                className={`story-card ${hasTests ? 'has-tests' : 'no-tests'}`}
                 data-has-tests={hasTests}
               >
-                {/* Selection Checkbox */}
-                <div style={{ position: 'absolute', top: '12px', left: '12px' }}>
-                  <input
-                    type="checkbox"
-                    checked={isSelected}
-                    onChange={() => toggleSelection(story.id)}
-                    onClick={(e) => e.stopPropagation()}
-                    style={{ width: '18px', height: '18px', cursor: 'pointer' }}
-                  />
-                </div>
-
-                <div className="story-header" style={{ marginTop: '8px' }}>
+                <div className="story-header">
                   <span className="story-badge">#{story.id}</span>
                   <span className="story-badge">{story.state}</span>
                 </div>
@@ -498,7 +272,7 @@ const UserStoriesView: React.FC = () => {
                       className="btn-story-action"
                       onClick={() => handleViewTests(tests, story.id)}
                     >
-                      👁️ View {testCount} Test{testCount > 1 ? 's' : ''}
+                      👁️ View {testCount} Tests
                     </button>
                   ) : null}
                 </div>
@@ -520,29 +294,6 @@ const UserStoriesView: React.FC = () => {
           })
         )}
       </div>
-
-      {/* Keyboard Shortcuts Modal */}
-      {showKeyboardHelp && (
-        <div className="re-modal" onClick={() => setShowKeyboardHelp(false)}>
-          <div className="re-modal-card" onClick={(e) => e.stopPropagation()}>
-            <div className="re-modal-title">⌨️ Keyboard Shortcuts</div>
-            <div style={{ padding: '16px' }}>
-              <div style={{ marginBottom: '12px' }}>
-                <strong>Ctrl/Cmd + A</strong> - Select all stories
-              </div>
-              <div style={{ marginBottom: '12px' }}>
-                <strong>Ctrl/Cmd + K</strong> - Show keyboard shortcuts
-              </div>
-              <div style={{ marginBottom: '12px' }}>
-                <strong>Escape</strong> - Clear selection
-              </div>
-            </div>
-            <div className="re-modal-actions">
-              <button className="re-btn azure" onClick={() => setShowKeyboardHelp(false)}>Got it!</button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 };
