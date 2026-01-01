@@ -10,6 +10,7 @@ const CreateWorkItemPage = React.lazy(() => import('../features/workItems/compon
 const TestPlansPage = React.lazy(() => import('../features/testPlans/components/TestPlansPage'));
 const GETitView = React.lazy(() => import('../features/apiRunner/GETitView'));
 const SharedParametersView = React.lazy(() => import('../features/sharedParameters/SharedParametersView'));
+const EditorDemo = React.lazy(() => import('../pages/EditorDemo').then(m => ({ default: m.EditorDemo })));
 
 export type AppRoute = {
   path: string;
@@ -19,6 +20,7 @@ export type AppRoute = {
 
 export const routes: AppRoute[] = [
   { path: '/', element: <LoginPage /> },
+  { path: '/editor-demo', element: <EditorDemo /> },
   {
     path: '/app/*',
     element: <Layout />,
