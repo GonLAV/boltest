@@ -1153,6 +1153,23 @@ const TestPlansPage: React.FC = () => {
 
           {activeTab === 'execute' && (
             <div className="tab-content">
+              {/* Phase 1 - Session Restore Banner */}
+              {showSessionRestore && (
+                <div className="tp-session-restore-banner">
+                  <div className="tp-session-restore-content">
+                    <span className="tp-session-icon">💾</span>
+                    <div className="tp-session-text">
+                      <strong>Test Session Found</strong>
+                      <p>You have an unsaved test execution session from {hasSavedSession ? 'a previous session' : 'recently'}. Would you like to restore it?</p>
+                    </div>
+                    <div className="tp-session-actions">
+                      <button className="btn btn-primary" onClick={restoreSession}>Restore Session</button>
+                      <button className="btn" onClick={discardSession}>Discard</button>
+                    </div>
+                  </div>
+                </div>
+              )}
+
               <div className="toolbar">
                 <div className="toolbar-left">
                   <input
@@ -1164,29 +1181,57 @@ const TestPlansPage: React.FC = () => {
                   <button className="btn btn-primary" onClick={startRun} disabled={!selectedPlanId || !!activeRunId}>
                     {activeRunId ? 'Run Created' : 'Start Run'}
                   </button>
-                  <button className="btn" onClick={() => setOutcomes((prev) => {
-                    const next = { ...prev };
-                    executeCases.forEach(c => next[c.id] = 'Passed');
-                    return next;
-                  })} disabled={!executeCases.length}>Mark All Pass</button>
-                  <button className="btn" onClick={() => setOutcomes((prev) => {
-                    const next = { ...prev };
-                    executeCases.forEach(c => next[c.id] = 'Failed');
-                    return next;
-                  })} disabled={!executeCases.length}>Mark All Fail</button>
+                  
+                  {/* Phase 1 - Bulk Actions */}
+                  {selectedTests.size > 0 && (
+                    <>
+                      <button className="btn" onClick={() => bulkSetOutcome('Passed')}>
+                        ✅ Pass Selected ({selectedTests.size})
+                      </button>
+                      <button className="btn" onClick={() => bulkSetOutcome('Failed')}>
+                        ❌ Fail Selected ({selectedTests.size})
+                      </button>
+                      <button className="btn" onClick={() => bulkSetOutcome('Blocked')}>
+                        ⛔ Block Selected ({selectedTests.size})
+                      </button>
+                      <button className="btn" onClick={clearAllSelections}>
+                        Clear Selection
+                      </button>
+                    </>
+                  )}
+                  
+                  {selectedTests.size === 0 && (
+                    <>
+                      <button className="btn" onClick={() => setOutcomes((prev) => {
+                        const next = { ...prev };
+                        executeCases.forEach(c => next[c.id] = 'Passed');
+                        return next;
+                      })} disabled={!executeCases.length}>Mark All Pass</button>
+                      <button className="btn" onClick={() => setOutcomes((prev) => {
+                        const next = { ...prev };
+                        executeCases.forEach(c => next[c.id] = 'Failed');
+                        return next;
+                      })} disabled={!executeCases.length}>Mark All Fail</button>
+                    </>
+                  )}
                 </div>
                 <div className="toolbar-right">
+                  {/* Phase 1 - Auto-save indicator */}
+                  {lastSaved && (
+                    <span className="muted mr-12" title={`Last saved: ${lastSaved.toLocaleTimeString()}`}>
+                      💾 Auto-saved {Math.round((Date.now() - lastSaved.getTime()) / 1000)}s ago
+                    </span>
+                  )}
+                  
                   {activeRunId && (
                     <span className="muted mr-12">Run #{activeRunId}</span>
                   )}
-                  <label className="muted">
-                    <input type="checkbox"
-                      checked={showFailedOnly}
-                      onChange={(e) => setShowFailedOnly(e.target.checked)}
-                      disabled={!Object.keys(pointByCase).length}
-                    />
-                    Failed-only
-                  </label>
+                  
+                  {/* Phase 1 - Keyboard Help Button */}
+                  <button className="btn btn-icon" onClick={() => setShowKeyboardHelp(true)} title="Keyboard Shortcuts (Ctrl+K)">
+                    ⌨️
+                  </button>
+                  
                   <span className="muted mr-12">
                     P:{counters.passed} F:{counters.failed} B:{counters.blocked} N:{counters.notrun} / {counters.total}
                   </span>
@@ -1196,68 +1241,241 @@ const TestPlansPage: React.FC = () => {
                 </div>
               </div>
 
+              {/* Phase 1 - Status Filters */}
+              <div className="tp-filter-bar">
+                <div className="tp-filter-group">
+                  <span className="tp-filter-label">Filter by Status:</span>
+                  <button 
+                    className={`tp-filter-btn ${statusFilter === 'all' ? 'active' : ''}`}
+                    onClick={() => setStatusFilter('all')}
+                  >
+                    All ({executeCases.length})
+                  </button>
+                  <button 
+                    className={`tp-filter-btn ${statusFilter === 'notrun' ? 'active' : ''}`}
+                    onClick={() => setStatusFilter('notrun')}
+                  >
+                    ⚪ Not Run ({counters.notrun})
+                  </button>
+                  <button 
+                    className={`tp-filter-btn ${statusFilter === 'passed' ? 'active' : ''}`}
+                    onClick={() => setStatusFilter('passed')}
+                  >
+                    ✅ Passed ({counters.passed})
+                  </button>
+                  <button 
+                    className={`tp-filter-btn ${statusFilter === 'failed' ? 'active' : ''}`}
+                    onClick={() => setStatusFilter('failed')}
+                  >
+                    ❌ Failed ({counters.failed})
+                  </button>
+                  <button 
+                    className={`tp-filter-btn ${statusFilter === 'blocked' ? 'active' : ''}`}
+                    onClick={() => setStatusFilter('blocked')}
+                  >
+                    ⛔ Blocked ({counters.blocked})
+                  </button>
+                  <button 
+                    className={`tp-filter-btn ${statusFilter === 'inprogress' ? 'active' : ''}`}
+                    onClick={() => setStatusFilter('inprogress')}
+                  >
+                    🔄 In Progress
+                  </button>
+                </div>
+                
+                {selectedTests.size === 0 && (
+                  <button className="btn btn-sm" onClick={selectAllTests} disabled={!executeCases.length}>
+                    Select All ({executeCases.length})
+                  </button>
+                )}
+              </div>
+
               <div className="table-container">
                 <table className="test-table">
                   <thead>
                     <tr>
+                      <th className="checkbox-cell">
+                        <input 
+                          type="checkbox" 
+                          className="suite-checkbox" 
+                          checked={selectedTests.size === executeCases.length && executeCases.length > 0}
+                          onChange={(e) => e.target.checked ? selectAllTests() : clearAllSelections()}
+                          aria-label="Select all tests"
+                        />
+                      </th>
                       <th>Case</th>
                       <th className="id-cell">ID</th>
                       <th>Tags</th>
                       <th>Status</th>
+                      <th>Timer</th>
                       <th>Notes</th>
+                      <th>Evidence</th>
                       <th>Actions</th>
                     </tr>
                   </thead>
                   <tbody>
-                    {!filteredCases.length && (
+                    {!executeCases.length && (
                       <tr>
-                        <td colSpan={5}>
+                        <td colSpan={9}>
                           <div className="empty-state tp-empty-pad">
                             <div className="empty-icon">🧪</div>
                             <p className="empty-title">No cases to execute</p>
-                            <p className="empty-text">Select a suite with test cases.</p>
+                            <p className="empty-text">
+                              {statusFilter !== 'all' ? `No tests match the "${statusFilter}" filter.` : 'Select a suite with test cases.'}
+                            </p>
                           </div>
                         </td>
                       </tr>
                     )}
-                    {executeCases.map((tc) => (
-                      <tr key={`exec-${tc.id}`} className={focusedCaseId === tc.id ? 'selected' : ''} onClick={() => setFocusedCaseId(tc.id)}>
-                        <td>{tc.title}</td>
-                        <td className="id-cell">{tc.id}{pointByCase[tc.id] ? <span className="muted"> (P{pointByCase[tc.id].id})</span> : null}</td>
-                        <td>
-                          {(tc.tags || []).length ? (
-                            <div className="tag-list">
-                              {(tc.tags || []).map((t) => (
-                                <span key={`${tc.id}-tag-${t}`} className="tag-chip">{t}</span>
-                              ))}
-                            </div>
-                          ) : (
-                            <span className="muted">—</span>
+                    {executeCases.map((tc) => {
+                      const isSelected = selectedTests.has(tc.id);
+                      const isExpanded = expandedTests.has(tc.id);
+                      const timer = testTimers[tc.id];
+                      const duration = timer ? (timer.duration || (Date.now() - timer.start)) : 0;
+                      const durationText = duration > 0 ? `${Math.floor(duration / 60000)}:${String(Math.floor((duration % 60000) / 1000)).padStart(2, '0')}` : '--:--';
+                      const evidence = evidenceFiles[tc.id] || [];
+                      
+                      return (
+                        <React.Fragment key={`exec-${tc.id}`}>
+                          <tr className={`${focusedCaseId === tc.id ? 'selected' : ''} ${isSelected ? 'tp-row-selected' : ''}`} onClick={() => setFocusedCaseId(tc.id)}>
+                            <td className="checkbox-cell" onClick={(e) => e.stopPropagation()}>
+                              <input 
+                                type="checkbox" 
+                                className="suite-checkbox"
+                                checked={isSelected}
+                                onChange={() => toggleTestSelection(tc.id)}
+                                aria-label={`Select test ${tc.id}`}
+                              />
+                            </td>
+                            <td>
+                              <div className="tp-test-title">
+                                <button 
+                                  className="tp-expand-btn"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    toggleTestExpansion(tc.id);
+                                  }}
+                                  title="Expand test details (Space)"
+                                >
+                                  {isExpanded ? '▼' : '▶'}
+                                </button>
+                                {tc.title}
+                              </div>
+                            </td>
+                            <td className="id-cell">{tc.id}{pointByCase[tc.id] ? <span className="muted"> (P{pointByCase[tc.id].id})</span> : null}</td>
+                            <td>
+                              {(tc.tags || []).length ? (
+                                <div className="tag-list">
+                                  {(tc.tags || []).map((t) => (
+                                    <span key={`${tc.id}-tag-${t}`} className="tag-chip">{t}</span>
+                                  ))}
+                                </div>
+                              ) : (
+                                <span className="muted">—</span>
+                              )}
+                            </td>
+                            <td>
+                              {outcomes[tc.id] ? (
+                                <span className={`status-badge status-${(outcomes[tc.id] || '').toLowerCase()}`}>{outcomes[tc.id]}</span>
+                              ) : timer?.start && !outcomes[tc.id] ? (
+                                <span className="status-badge status-inprogress">In Progress</span>
+                              ) : (
+                                <span className="status-badge status-notrun">Not Run</span>
+                              )}
+                            </td>
+                            <td>
+                              <span className="tp-timer" title={timer?.start ? 'Test duration' : 'Not started'}>
+                                ⏱️ {durationText}
+                              </span>
+                            </td>
+                            <td>
+                              <textarea
+                                className="form-textarea tp-notes-area"
+                                placeholder="Notes (required for failures)"
+                                value={notes[tc.id] || ''}
+                                onChange={(e) => setNotes((prev) => ({ ...prev, [tc.id]: e.target.value }))}
+                                rows={1}
+                                onClick={(e) => e.stopPropagation()}
+                              />
+                            </td>
+                            <td>
+                              <div className="tp-evidence-cell">
+                                <label className="tp-evidence-upload" title="Upload evidence">
+                                  <input 
+                                    type="file" 
+                                    multiple 
+                                    accept="image/*,video/*,.pdf,.txt"
+                                    onChange={(e) => handleEvidenceUpload(tc.id, e.target.files)}
+                                    style={{ display: 'none' }}
+                                  />
+                                  📎 {evidence.length > 0 ? `(${evidence.length})` : ''}
+                                </label>
+                                {evidence.length > 0 && (
+                                  <div className="tp-evidence-preview">
+                                    {evidence.map((file, idx) => (
+                                      <span key={idx} className="tp-evidence-badge" title={file.name}>
+                                        {file.name.substring(0, 8)}...
+                                        <button 
+                                          className="tp-evidence-remove"
+                                          onClick={(e) => {
+                                            e.stopPropagation();
+                                            removeEvidence(tc.id, idx);
+                                          }}
+                                        >×</button>
+                                      </span>
+                                    ))}
+                                  </div>
+                                )}
+                              </div>
+                            </td>
+                            <td className="actions">
+                              <button className="action-btn" title="Pass (P)" onClick={() => setOutcome(tc.id, 'Passed')}>✅</button>
+                              <button className="action-btn" title="Fail (F)" onClick={() => setOutcome(tc.id, 'Failed')}>❌</button>
+                              <button className="action-btn" title="Blocked (B)" onClick={() => setOutcome(tc.id, 'Blocked')}>⛔</button>
+                              <button className="action-btn" title="In Progress (I)" onClick={() => {
+                                if (!testTimers[tc.id]?.start) {
+                                  setTestTimers((prev) => ({ ...prev, [tc.id]: { start: Date.now(), duration: 0 } }));
+                                }
+                              }}>🔄</button>
+                              <button className="action-btn" title="Reset (R)" onClick={() => setOutcome(tc.id, null)}>↩️</button>
+                            </td>
+                          </tr>
+                          
+                          {/* Phase 1 - Expandable test steps */}
+                          {isExpanded && (
+                            <tr className="tp-expanded-row">
+                              <td colSpan={9}>
+                                <div className="tp-test-details">
+                                  <div className="tp-detail-section">
+                                    <h4>Test Steps</h4>
+                                    <p className="muted">Steps would be loaded from test case details...</p>
+                                    <ol className="tp-steps-list">
+                                      <li>Open application</li>
+                                      <li>Navigate to login page</li>
+                                      <li>Enter credentials</li>
+                                      <li>Verify successful login</li>
+                                    </ol>
+                                  </div>
+                                  {evidence.length > 0 && (
+                                    <div className="tp-detail-section">
+                                      <h4>Evidence Attached ({evidence.length})</h4>
+                                      <div className="tp-evidence-list">
+                                        {evidence.map((file, idx) => (
+                                          <div key={idx} className="tp-evidence-item">
+                                            <span>📄 {file.name}</span>
+                                            <span className="muted">{(file.size / 1024).toFixed(1)} KB</span>
+                                          </div>
+                                        ))}
+                                      </div>
+                                    </div>
+                                  )}
+                                </div>
+                              </td>
+                            </tr>
                           )}
-                        </td>
-                        <td>
-                          {outcomes[tc.id] ? (
-                            <span className={`status-badge status-${(outcomes[tc.id] || '').toLowerCase()}`}>{outcomes[tc.id]}</span>
-                          ) : (
-                            <span className="status-badge status-notrun">Not Run</span>
-                          )}
-                        </td>
-                        <td>
-                          <input
-                            className="form-input"
-                            placeholder="Optional notes"
-                            value={notes[tc.id] || ''}
-                            onChange={(e) => setNotes((prev) => ({ ...prev, [tc.id]: e.target.value }))}
-                          />
-                        </td>
-                        <td className="actions">
-                          <button className="action-btn" title="Pass" onClick={() => setOutcome(tc.id, 'Passed')}>✅</button>
-                          <button className="action-btn" title="Fail" onClick={() => setOutcome(tc.id, 'Failed')}>❌</button>
-                          <button className="action-btn" title="Blocked" onClick={() => setOutcome(tc.id, 'Blocked')}>⛔</button>
-                          <button className="action-btn" title="Reset" onClick={() => setOutcome(tc.id, null)}>↩️</button>
-                        </td>
-                      </tr>
-                    ))}
+                        </React.Fragment>
+                      );
+                    })}
                   </tbody>
                 </table>
               </div>
@@ -1484,6 +1702,92 @@ const TestPlansPage: React.FC = () => {
               </button>
             </div>
           </form>
+        </div>
+      </div>
+
+      {/* Phase 1 - Keyboard Shortcuts Help Modal */}
+      <div className={`modal-overlay ${showKeyboardHelp ? 'active' : ''}`}>
+        <div className="modal">
+          <div className="modal-header">
+            <h2 className="modal-title">⌨️ Keyboard Shortcuts</h2>
+            <button className="modal-close" onClick={() => setShowKeyboardHelp(false)}>
+              ×
+            </button>
+          </div>
+          <div className="modal-body">
+            <div className="tp-shortcuts-grid">
+              <div className="tp-shortcuts-section">
+                <h4>Test Execution</h4>
+                <div className="tp-shortcut-row">
+                  <kbd>P</kbd>
+                  <span>Mark test as Passed</span>
+                </div>
+                <div className="tp-shortcut-row">
+                  <kbd>F</kbd>
+                  <span>Mark test as Failed</span>
+                </div>
+                <div className="tp-shortcut-row">
+                  <kbd>B</kbd>
+                  <span>Mark test as Blocked</span>
+                </div>
+                <div className="tp-shortcut-row">
+                  <kbd>I</kbd>
+                  <span>Mark as In Progress (start timer)</span>
+                </div>
+                <div className="tp-shortcut-row">
+                  <kbd>R</kbd>
+                  <span>Reset test status</span>
+                </div>
+              </div>
+
+              <div className="tp-shortcuts-section">
+                <h4>Navigation</h4>
+                <div className="tp-shortcut-row">
+                  <kbd>↑</kbd>
+                  <span>Move to previous test</span>
+                </div>
+                <div className="tp-shortcut-row">
+                  <kbd>↓</kbd>
+                  <span>Move to next test</span>
+                </div>
+                <div className="tp-shortcut-row">
+                  <kbd>Space</kbd>
+                  <span>Expand/collapse test details</span>
+                </div>
+              </div>
+
+              <div className="tp-shortcuts-section">
+                <h4>Bulk Operations</h4>
+                <div className="tp-shortcut-row">
+                  <kbd>Ctrl</kbd> + <kbd>A</kbd>
+                  <span>Select all tests</span>
+                </div>
+                <div className="tp-shortcut-row">
+                  <kbd>Ctrl</kbd> + <kbd>Enter</kbd>
+                  <span>Submit test results</span>
+                </div>
+                <div className="tp-shortcut-row">
+                  <kbd>Ctrl</kbd> + <kbd>K</kbd>
+                  <span>Show keyboard shortcuts (this dialog)</span>
+                </div>
+              </div>
+
+              <div className="tp-shortcuts-section">
+                <h4>Tips</h4>
+                <p className="muted">
+                  • Use keyboard shortcuts for 10x faster test execution<br/>
+                  • Auto-save runs every 30 seconds - never lose progress<br/>
+                  • Expand tests (Space) to see details and evidence<br/>
+                  • Select multiple tests for bulk operations
+                </p>
+              </div>
+            </div>
+          </div>
+          <div className="modal-footer">
+            <button type="button" className="btn btn-primary" onClick={() => setShowKeyboardHelp(false)}>
+              Got it!
+            </button>
+          </div>
         </div>
       </div>
 
