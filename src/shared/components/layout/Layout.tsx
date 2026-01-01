@@ -161,7 +161,37 @@ const Layout: React.FC = () => {
           }}
         />
         <div id="contentArea">
-          <Suspense fallback={<div className="loading-fallback">Loading…</div>}>
+          <Suspense fallback={
+            <div style={{
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              justifyContent: 'center',
+              minHeight: 'calc(100vh - 120px)',
+              padding: '40px'
+            }}>
+              <div style={{
+                fontSize: '48px',
+                marginBottom: '16px',
+                animation: 'pulse 1.5s ease-in-out infinite'
+              }}>
+                ⚡
+              </div>
+              <div style={{
+                fontSize: '18px',
+                color: '#666',
+                fontWeight: 500
+              }}>
+                Loading...
+              </div>
+              <style>{`
+                @keyframes pulse {
+                  0%, 100% { opacity: 1; transform: scale(1); }
+                  50% { opacity: 0.5; transform: scale(1.1); }
+                }
+              `}</style>
+            </div>
+          }>
             <Outlet />
           </Suspense>
         </div>
