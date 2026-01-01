@@ -70,6 +70,19 @@ const TestPlansPage: React.FC = () => {
   const [pointByCase, setPointByCase] = useState<Record<string, { id: number; outcome?: string }>>({});
   const [showFailedOnly, setShowFailedOnly] = useState(false);
 
+  // Phase 1 - New features state
+  const [selectedTests, setSelectedTests] = useState<Set<string>>(new Set());
+  const [statusFilter, setStatusFilter] = useState<'all' | 'notrun' | 'inprogress' | 'passed' | 'failed' | 'blocked'>('all');
+  const [testTimers, setTestTimers] = useState<Record<string, { start: number; duration: number }>>({});
+  const [sessionStartTime, setSessionStartTime] = useState<number | null>(null);
+  const [evidenceFiles, setEvidenceFiles] = useState<Record<string, File[]>>({});
+  const [expandedTests, setExpandedTests] = useState<Set<string>>(new Set());
+  const [showKeyboardHelp, setShowKeyboardHelp] = useState(false);
+  const [autoSaveEnabled, setAutoSaveEnabled] = useState(true);
+  const [lastSaved, setLastSaved] = useState<Date | null>(null);
+  const [hasSavedSession, setHasSavedSession] = useState(false);
+  const [showSessionRestore, setShowSessionRestore] = useState(false);
+
   const [suiteForm, setSuiteForm] = useState({ name: '', suiteType: 'static', parentId: '', description: '' });
   const [caseForm, setCaseForm] = useState({
     title: '',
@@ -101,6 +114,82 @@ const TestPlansPage: React.FC = () => {
     const id = setTimeout(() => setToast(null), 2600);
     return () => clearTimeout(id);
   }, [toast]);
+
+  // Phase 1 - Check for saved session on mount
+  useEffect(() => {
+    const savedSession = localStorage.getItem('boltest:testrun:session');
+    if (savedSession) {
+      try {
+        const parsed = JSON.parse(savedSession);
+        const age = Date.now() - (parsed.timestamp || 0);
+        const sevenDays = 7 * 24 * 60 * 60 * 1000;
+        if (age < sevenDays) {
+          setHasSavedSession(true);
+          setShowSessionRestore(true);
+        } else {
+          localStorage.removeItem('boltest:testrun:session');
+        }
+      } catch (e) {
+        localStorage.removeItem('boltest:testrun:session');
+      }
+    }
+  }, []);
+
+  // Phase 1 - Auto-save session every 30 seconds
+  useEffect(() => {
+    if (!autoSaveEnabled || activeTab !== 'execute') return;
+    if (!activeRunId && Object.keys(outcomes).length === 0) return;
+
+    const saveSession = () => {
+      const sessionData = {
+        runName,
+        activeRunId,
+        outcomes,
+        notes,
+        selectedTests: Array.from(selectedTests),
+        testTimers,
+        sessionStartTime,
+        timestamp: Date.now(),
+        selectedPlanId,
+        selectedSuiteId,
+      };
+      localStorage.setItem('boltest:testrun:session', JSON.stringify(sessionData));
+      setLastSaved(new Date());
+    };
+
+    const intervalId = setInterval(saveSession, 30000); // 30 seconds
+    return () => clearInterval(intervalId);
+  }, [autoSaveEnabled, activeTab, activeRunId, outcomes, notes, runName, selectedTests, testTimers, sessionStartTime, selectedPlanId, selectedSuiteId]);
+
+  // Phase 1 - Session restore function
+  const restoreSession = () => {
+    const savedSession = localStorage.getItem('boltest:testrun:session');
+    if (!savedSession) return;
+    
+    try {
+      const parsed = JSON.parse(savedSession);
+      setRunName(parsed.runName || runName);
+      setActiveRunId(parsed.activeRunId || null);
+      setOutcomes(parsed.outcomes || {});
+      setNotes(parsed.notes || {});
+      setSelectedTests(new Set(parsed.selectedTests || []));
+      setTestTimers(parsed.testTimers || {});
+      setSessionStartTime(parsed.sessionStartTime || null);
+      if (parsed.selectedPlanId) setSelectedPlanId(parsed.selectedPlanId);
+      if (parsed.selectedSuiteId) setSelectedSuiteId(parsed.selectedSuiteId);
+      setShowSessionRestore(false);
+      setToast('Session restored successfully');
+      setActiveTab('execute');
+    } catch (e) {
+      setToast('Failed to restore session');
+    }
+  };
+
+  const discardSession = () => {
+    localStorage.removeItem('boltest:testrun:session');
+    setShowSessionRestore(false);
+    setHasSavedSession(false);
+  };
 
   const loadPlans = async () => {
     if (!org || !project) {
@@ -510,6 +599,83 @@ const TestPlansPage: React.FC = () => {
 
   const setOutcome = (caseId: string, value: 'Passed' | 'Failed' | 'Blocked' | null) => {
     setOutcomes((prev) => ({ ...prev, [caseId]: value }));
+    // Start/stop timer
+    if (value && !testTimers[caseId]?.start) {
+      setTestTimers((prev) => ({
+        ...prev,
+        [caseId]: { start: Date.now(), duration: 0 }
+      }));
+    } else if (value && testTimers[caseId]?.start) {
+      setTestTimers((prev) => ({
+        ...prev,
+        [caseId]: { ...prev[caseId], duration: Date.now() - prev[caseId].start }
+      }));
+    }
+  };
+
+  // Phase 1 - Bulk selection functions
+  const toggleTestSelection = (caseId: string) => {
+    setSelectedTests((prev) => {
+      const next = new Set(prev);
+      if (next.has(caseId)) {
+        next.delete(caseId);
+      } else {
+        next.add(caseId);
+      }
+      return next;
+    });
+  };
+
+  const selectAllTests = () => {
+    setSelectedTests(new Set(executeCases.map((tc) => tc.id)));
+  };
+
+  const clearAllSelections = () => {
+    setSelectedTests(new Set());
+  };
+
+  const bulkSetOutcome = (outcome: 'Passed' | 'Failed' | 'Blocked') => {
+    if (selectedTests.size === 0) {
+      setToast('No tests selected');
+      return;
+    }
+    const newOutcomes = { ...outcomes };
+    selectedTests.forEach((id) => {
+      newOutcomes[id] = outcome;
+    });
+    setOutcomes(newOutcomes);
+    setToast(`Set ${selectedTests.size} test(s) to ${outcome}`);
+  };
+
+  // Phase 1 - Evidence upload handler
+  const handleEvidenceUpload = (caseId: string, files: FileList | null) => {
+    if (!files || files.length === 0) return;
+    const fileArray = Array.from(files);
+    setEvidenceFiles((prev) => ({
+      ...prev,
+      [caseId]: [...(prev[caseId] || []), ...fileArray]
+    }));
+    setToast(`Added ${fileArray.length} file(s) as evidence`);
+  };
+
+  const removeEvidence = (caseId: string, fileIndex: number) => {
+    setEvidenceFiles((prev) => ({
+      ...prev,
+      [caseId]: (prev[caseId] || []).filter((_, idx) => idx !== fileIndex)
+    }));
+  };
+
+  // Phase 1 - Toggle test expansion for steps view
+  const toggleTestExpansion = (caseId: string) => {
+    setExpandedTests((prev) => {
+      const next = new Set(prev);
+      if (next.has(caseId)) {
+        next.delete(caseId);
+      } else {
+        next.add(caseId);
+      }
+      return next;
+    });
   };
 
   const submitResults = async () => {
@@ -545,31 +711,96 @@ const TestPlansPage: React.FC = () => {
     }
   };
 
-  // Build execute list (respecting failed-only filter)
+  // Build execute list (respecting filters)
   const executeCases = useMemo(() => {
-    if (!showFailedOnly) return filteredCases;
-    return filteredCases.filter((c) => (pointByCase[c.id]?.outcome || '').toLowerCase() === 'failed');
-  }, [filteredCases, pointByCase, showFailedOnly]);
+    let filtered = filteredCases;
+    
+    // Apply status filter
+    if (statusFilter !== 'all') {
+      filtered = filtered.filter((c) => {
+        const outcome = outcomes[c.id];
+        const prevOutcome = (pointByCase[c.id]?.outcome || '').toLowerCase();
+        
+        switch (statusFilter) {
+          case 'notrun':
+            return !outcome && prevOutcome !== 'passed' && prevOutcome !== 'failed';
+          case 'inprogress':
+            return testTimers[c.id]?.start && !outcome;
+          case 'passed':
+            return outcome === 'Passed' || (!outcome && prevOutcome === 'passed');
+          case 'failed':
+            return outcome === 'Failed' || (!outcome && prevOutcome === 'failed');
+          case 'blocked':
+            return outcome === 'Blocked';
+          default:
+            return true;
+        }
+      });
+    }
+    
+    // Legacy failed-only filter
+    if (showFailedOnly) {
+      filtered = filtered.filter((c) => (pointByCase[c.id]?.outcome || '').toLowerCase() === 'failed');
+    }
+    
+    return filtered;
+  }, [filteredCases, pointByCase, showFailedOnly, statusFilter, outcomes, testTimers]);
 
-  // Keyboard shortcuts for Execute tab
+  // Keyboard shortcuts for Execute tab - Phase 1 Enhanced
   useEffect(() => {
     if (activeTab !== 'execute') return;
     const onKey = (e: KeyboardEvent) => {
       if (!executeCases.length) return;
+      
+      // Handle Ctrl/Cmd combinations
+      if ((e.ctrlKey || e.metaKey)) {
+        if (e.key.toLowerCase() === 'a') {
+          e.preventDefault();
+          selectAllTests();
+          return;
+        }
+        if (e.key.toLowerCase() === 'k') {
+          e.preventDefault();
+          setShowKeyboardHelp(true);
+          return;
+        }
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          submitResults();
+          return;
+        }
+      }
+      
       // Determine index of focused row
       const idx = focusedCaseId
         ? executeCases.findIndex((c) => c.id === focusedCaseId)
         : 0;
       let nextIdx = idx < 0 ? 0 : idx;
       const key = e.key.toLowerCase();
+      const id = executeCases[nextIdx]?.id;
+      
       if (key === 'p') {
-        const id = executeCases[nextIdx]?.id; if (id) setOutcome(id, 'Passed');
+        if (id) setOutcome(id, 'Passed');
       } else if (key === 'f') {
-        const id = executeCases[nextIdx]?.id; if (id) setOutcome(id, 'Failed');
+        if (id) setOutcome(id, 'Failed');
       } else if (key === 'b') {
-        const id = executeCases[nextIdx]?.id; if (id) setOutcome(id, 'Blocked');
+        if (id) setOutcome(id, 'Blocked');
       } else if (key === 'r') {
-        const id = executeCases[nextIdx]?.id; if (id) setOutcome(id, null);
+        if (id) setOutcome(id, null);
+      } else if (key === 'i') {
+        // Mark as In Progress (start timer)
+        if (id && !testTimers[id]?.start) {
+          setTestTimers((prev) => ({
+            ...prev,
+            [id]: { start: Date.now(), duration: 0 }
+          }));
+        }
+      } else if (e.key === ' ') {
+        // Space to expand/collapse test
+        if (id) {
+          toggleTestExpansion(id);
+          e.preventDefault();
+        }
       } else if (e.key === 'ArrowDown') {
         nextIdx = Math.min(executeCases.length - 1, (idx < 0 ? -1 : idx) + 1);
         setFocusedCaseId(executeCases[nextIdx]?.id || null);
@@ -582,7 +813,7 @@ const TestPlansPage: React.FC = () => {
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [activeTab, executeCases, focusedCaseId]);
+  }, [activeTab, executeCases, focusedCaseId, testTimers]);
 
   const counters = useMemo(() => {
     const total = executeCases.length;
