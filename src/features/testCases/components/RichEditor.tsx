@@ -560,13 +560,19 @@ export const RichEditor: React.FC<Props> = ({ initialHtml = '', onChange, placeh
     }
   };
 
+  const getValidSelection = (): Range | null => {
+    const sel = window.getSelection();
+    if (!sel || sel.rangeCount === 0) return null;
+    const range = sel.getRangeAt(0);
+    if (range.collapsed) return null;
+    return range;
+  };
+
   const applyInlineCode = () => {
     ensureFocus();
     restoreSelection();
-    const sel = window.getSelection();
-    if (!sel || sel.rangeCount === 0) return;
-    const range = sel.getRangeAt(0);
-    if (range.collapsed) return;
+    const range = getValidSelection();
+    if (!range) return;
 
     const code = document.createElement('code');
     code.className = 'azure-code-inline';
@@ -578,8 +584,11 @@ export const RichEditor: React.FC<Props> = ({ initialHtml = '', onChange, placeh
       const newRange = document.createRange();
       newRange.selectNodeContents(code);
       newRange.collapse(false);
-      sel.removeAllRanges();
-      sel.addRange(newRange);
+      const sel = window.getSelection();
+      if (sel) {
+        sel.removeAllRanges();
+        sel.addRange(newRange);
+      }
       emitChange();
       saveSelection();
     } catch (e) {
@@ -616,6 +625,17 @@ export const RichEditor: React.FC<Props> = ({ initialHtml = '', onChange, placeh
   const pasteAsPlainText = async () => {
     ensureFocus();
     restoreSelection();
+    
+    // Check if Clipboard API is available
+    if (!navigator.clipboard || !navigator.clipboard.readText) {
+      console.warn('Clipboard API not available');
+      const fallbackText = prompt('Clipboard API not available. Please paste your text here:');
+      if (fallbackText) {
+        runCommand('insertText', fallbackText);
+      }
+      return;
+    }
+    
     try {
       const text = await navigator.clipboard.readText();
       if (text) {
@@ -623,7 +643,11 @@ export const RichEditor: React.FC<Props> = ({ initialHtml = '', onChange, placeh
       }
     } catch (e) {
       console.error('Paste failed:', e);
-      alert('Unable to paste. Please use Ctrl+V or check clipboard permissions.');
+      // Fallback to prompt
+      const fallbackText = prompt('Unable to access clipboard. Please paste your text here:');
+      if (fallbackText) {
+        runCommand('insertText', fallbackText);
+      }
     }
   };
 
@@ -1067,23 +1091,23 @@ export const RichEditor: React.FC<Props> = ({ initialHtml = '', onChange, placeh
             {activeModal === 'shortcuts' && (
               <>
                 <div className="re-modal-title">⌨️ Keyboard Shortcuts</div>
-                <div style={{ maxHeight: '400px', overflowY: 'auto', padding: '8px' }}>
-                  <div style={{ marginBottom: '16px' }}>
-                    <div style={{ color: '#00ccff', fontWeight: 'bold', marginBottom: '8px', fontSize: '14px' }}>Text Formatting</div>
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '6px', fontSize: '13px', color: 'rgba(255,255,255,0.85)' }}>
-                      <div><kbd style={{ background: 'rgba(0,102,204,0.2)', padding: '2px 6px', borderRadius: '4px', fontSize: '11px' }}>Ctrl+B</kbd> Bold</div>
-                      <div><kbd style={{ background: 'rgba(0,102,204,0.2)', padding: '2px 6px', borderRadius: '4px', fontSize: '11px' }}>Ctrl+I</kbd> Italic</div>
-                      <div><kbd style={{ background: 'rgba(0,102,204,0.2)', padding: '2px 6px', borderRadius: '4px', fontSize: '11px' }}>Ctrl+U</kbd> Underline</div>
+                <div className="re-shortcuts-container">
+                  <div className="re-shortcuts-section">
+                    <div className="re-shortcuts-section-title">Text Formatting</div>
+                    <div className="re-shortcuts-grid">
+                      <div><kbd className="re-kbd">Ctrl+B</kbd> Bold</div>
+                      <div><kbd className="re-kbd">Ctrl+I</kbd> Italic</div>
+                      <div><kbd className="re-kbd">Ctrl+U</kbd> Underline</div>
                     </div>
                   </div>
-                  <div style={{ marginBottom: '16px' }}>
-                    <div style={{ color: '#00ccff', fontWeight: 'bold', marginBottom: '8px', fontSize: '14px' }}>Undo/Redo</div>
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '6px', fontSize: '13px', color: 'rgba(255,255,255,0.85)' }}>
-                      <div><kbd style={{ background: 'rgba(0,102,204,0.2)', padding: '2px 6px', borderRadius: '4px', fontSize: '11px' }}>Ctrl+Z</kbd> Undo</div>
-                      <div><kbd style={{ background: 'rgba(0,102,204,0.2)', padding: '2px 6px', borderRadius: '4px', fontSize: '11px' }}>Ctrl+Y</kbd> Redo</div>
+                  <div className="re-shortcuts-section">
+                    <div className="re-shortcuts-section-title">Undo/Redo</div>
+                    <div className="re-shortcuts-grid">
+                      <div><kbd className="re-kbd">Ctrl+Z</kbd> Undo</div>
+                      <div><kbd className="re-kbd">Ctrl+Y</kbd> Redo</div>
                     </div>
                   </div>
-                  <div className="re-modal-info" style={{ marginTop: '16px' }}>
+                  <div className="re-modal-info">
                     💡 Tip: All formatting buttons have tooltips - hover to see their functions!
                   </div>
                 </div>
